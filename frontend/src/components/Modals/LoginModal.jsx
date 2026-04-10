@@ -1,179 +1,185 @@
-import React, { useState, useEffect } from 'react'
-import Input_Text from '../Input_Fields/Input_Text.jsx'
-import Input_Password from '../Input_Fields/Input_Password.jsx'
-import Btn_X from '../Buttons/Btn_X.jsx'
-import Button from '../Buttons/Button.jsx'
-import Client_Logo from '../Logo/System_Logo.jsx'
-import RegisterModal from './RegisterModal.jsx'
-import ForgotPasswordModal from './ForgotPasswordModal.jsx'
-import ResetPasswordModal from './ResetPasswordModal.jsx'
-import { useNavigate } from 'react-router-dom'
-import { FiUser, FiLock, FiEye } from 'react-icons/fi'
-import axiosInstance from '../../api/axios.js'
-import { toast } from 'react-toastify'
-import historyManager from '../../utils/historyManager.js'
+import React, { useState, useEffect } from "react";
+import Input_Text from "../Input_Fields/Input_Text.jsx";
+import Input_Password from "../Input_Fields/Input_Password.jsx";
+import Btn_X from "../Buttons/Btn_X.jsx";
+import Button from "../Buttons/Button.jsx";
+import Client_Logo from "../Logo/System_Logo.jsx";
+import RegisterModal from "./RegisterModal.jsx";
+import ForgotPasswordModal from "./ForgotPasswordModal.jsx";
+import ResetPasswordModal from "./ResetPasswordModal.jsx";
+import { useNavigate } from "react-router-dom";
+import { FiUser, FiLock, FiEye } from "react-icons/fi";
+import axiosInstance from "../../api/axios.js";
+import { toast } from "react-toastify";
+import historyManager from "../../utils/historyManager.js";
 
 const LoginModal = ({ isOpen, onClose }) => {
-  const navigate = useNavigate()
-  const [showRegister, setShowRegister] = useState(false)
-  const [showForgotPassword, setShowForgotPassword] = useState(false)
-  const [showResetPassword, setShowResetPassword] = useState(false)
-  const [resetEmail, setResetEmail] = useState('')
-  const [adminExists, setAdminExists] = useState(false)
-  const [checkingAdmin, setCheckingAdmin] = useState(false)
+  const navigate = useNavigate();
+  const [showRegister, setShowRegister] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [adminExists, setAdminExists] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
-  const [isLoading, setIsLoading] = useState(false)
+    email: "",
+    password: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   // Clear form when modal closes or when switching to other modals
   useEffect(() => {
     if (!isOpen || showRegister || showForgotPassword || showResetPassword) {
       setFormData({
-        email: '',
-        password: ''
-      })
+        email: "",
+        password: "",
+      });
     }
-  }, [isOpen, showRegister, showForgotPassword, showResetPassword])
+  }, [isOpen, showRegister, showForgotPassword, showResetPassword]);
 
   // Clear form when component unmounts (navigation away)
   useEffect(() => {
     return () => {
       setFormData({
-        email: '',
-        password: ''
-      })
-    }
-  }, [])
+        email: "",
+        password: "",
+      });
+    };
+  }, []);
 
   // Check if admin account exists when modal opens
   useEffect(() => {
     if (isOpen) {
-      checkAdminExists()
+      checkAdminExists();
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   const checkAdminExists = async () => {
-    setCheckingAdmin(true)
+    setCheckingAdmin(true);
     try {
-      const response = await axiosInstance.get('/admin/exists')
+      const response = await axiosInstance.get("/admin/exists");
       if (response.data.success) {
-        setAdminExists(response.data.exists)
+        setAdminExists(response.data.exists);
       }
     } catch (error) {
-      console.error('Error checking admin existence:', error)
+      console.error("Error checking admin existence:", error);
       // Default to showing register link if check fails
-      setAdminExists(false)
+      setAdminExists(false);
     } finally {
-      setCheckingAdmin(false)
+      setCheckingAdmin(false);
     }
-  }
+  };
 
   const handleSwitchToRegister = () => {
-    setShowRegister(true)
-  }
+    setShowRegister(true);
+  };
 
   const handleSwitchToForgotPassword = () => {
-    setShowForgotPassword(true)
-  }
+    setShowForgotPassword(true);
+  };
 
   const handleForgotPasswordClose = () => {
-    setShowForgotPassword(false)
-    onClose()
-  }
+    setShowForgotPassword(false);
+    onClose();
+  };
 
   const handleResetPasswordClose = () => {
-    setShowResetPassword(false)
-    setShowForgotPassword(false)
-    onClose()
-  }
+    setShowResetPassword(false);
+    setShowForgotPassword(false);
+    onClose();
+  };
 
   const handleVerified = (email) => {
-    setResetEmail(email)
-    setShowForgotPassword(false)
-    setShowResetPassword(true)
-  }
+    setResetEmail(email);
+    setShowForgotPassword(false);
+    setShowResetPassword(true);
+  };
 
   const handleRegisterClose = () => {
-    setShowRegister(false)
-    onClose()
-  }
+    setShowRegister(false);
+    onClose();
+  };
   useEffect(() => {
     if (isOpen || showRegister || showForgotPassword || showResetPassword) {
-      const scrollY = window.scrollY
-      document.body.style.position = 'fixed'
-      document.body.style.top = `-${scrollY}px`
-      document.body.style.left = '0'
-      document.body.style.right = '0'
-      document.body.style.overflow = 'hidden'
-      document.body.style.width = '100%'
-      document.body.style.height = '100vh'
-      document.body.style.touchAction = 'none'
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.overflow = "hidden";
+      document.body.style.width = "100%";
+      document.body.style.height = "100vh";
+      document.body.style.touchAction = "none";
     } else {
-      const scrollY = document.body.style.top
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-      document.body.style.overflow = ''
-      document.body.style.width = ''
-      document.body.style.height = ''
-      document.body.style.touchAction = ''
-      window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+      document.body.style.width = "";
+      document.body.style.height = "";
+      document.body.style.touchAction = "";
+      window.scrollTo(0, parseInt(scrollY || "0") * -1);
     }
 
     return () => {
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-      document.body.style.overflow = ''
-      document.body.style.width = ''
-      document.body.style.height = ''
-      document.body.style.touchAction = ''
-    }
-  }, [isOpen, showRegister, showForgotPassword, showResetPassword])
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+      document.body.style.width = "";
+      document.body.style.height = "";
+      document.body.style.touchAction = "";
+    };
+  }, [isOpen, showRegister, showForgotPassword, showResetPassword]);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsLoading(true)
-    
+    e.preventDefault();
+    setIsLoading(true);
+
     try {
       // Call login API with email and password
-      const response = await axiosInstance.post('/admin/login', {
+      const response = await axiosInstance.post("/admin/login", {
         email: formData.email,
-        password: formData.password
-      })
-      
+        password: formData.password,
+      });
+
       if (response.data.success) {
-        toast.success('Login successful!')
-        setIsLoading(false)
-        
+        toast.success("Login successful!");
+        setIsLoading(false);
+
+        // Store user data in localStorage
+        if (response.data.data) {
+          localStorage.setItem("user", JSON.stringify(response.data.data));
+        }
+
         // Handle login history management
-        historyManager.handleLogin()
-        
-        onClose()
-        navigate('/home')
+        historyManager.handleLogin();
+
+        onClose();
+        navigate("/home");
       } else {
-        toast.error(response.data.message || 'Login failed')
+        toast.error(response.data.message || "Login failed");
       }
     } catch (error) {
-      console.error('Login error:', error)
-      toast.error(error.response?.data?.message || 'Login failed')
+      console.error("Login error:", error);
+      toast.error(error.response?.data?.message || "Login failed");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  if (!isOpen && !showRegister && !showForgotPassword && !showResetPassword) return null
+  if (!isOpen && !showRegister && !showForgotPassword && !showResetPassword)
+    return null;
 
   return (
     <>
@@ -182,7 +188,10 @@ const LoginModal = ({ isOpen, onClose }) => {
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[360px] sm:max-w-[380px] relative overflow-hidden flex flex-col items-center p-4 sm:p-5 animate-in zoom-in-95 duration-300">
             {/* Close Button */}
             <div className="absolute top-3 right-3 z-10">
-              <Btn_X onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600" />
+              <Btn_X
+                onClick={onClose}
+                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600"
+              />
             </div>
 
             {/* Logo and Header Section */}
@@ -190,17 +199,22 @@ const LoginModal = ({ isOpen, onClose }) => {
               <div className="mb-1">
                 <Client_Logo size={window.innerWidth < 640 ? 40 : 55} />
               </div>
-              
+
               <h1 className="text-[#188b3e] text-sm sm:text-base font-black leading-tight mb-1 px-1">
                 Nueva Vizcaya Electric Cooperative
               </h1>
 
               <div>
-                <h2 className="text-gray-800 text-xs  sm:text-sm font-bold uppercase tracking-tight">Welcome Back</h2>
+                <h2 className="text-gray-800 text-xs  sm:text-sm font-bold uppercase tracking-tight">
+                  Welcome Back
+                </h2>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="w-full space-y-1.5 text-left">
+            <form
+              onSubmit={handleSubmit}
+              className="w-full space-y-1.5 text-left"
+            >
               <Input_Text
                 label="Email"
                 name="email"
@@ -222,8 +236,8 @@ const LoginModal = ({ isOpen, onClose }) => {
 
               <div className="flex justify-between items-center">
                 <div></div>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={handleSwitchToForgotPassword}
                   className="text-[#188b3e] text-xs font-bold hover:underline underline-offset-4 transition-all"
                 >
@@ -248,9 +262,9 @@ const LoginModal = ({ isOpen, onClose }) => {
               <div className="text-center mt-1.5">
                 {!checkingAdmin && !adminExists && (
                   <p className="text-gray-500 text-xs">
-                    Don't have an account?{' '}
-                    <button 
-                      type="button" 
+                    Don't have an account?{" "}
+                    <button
+                      type="button"
                       onClick={handleSwitchToRegister}
                       className="text-[#188b3e] font-bold hover:underline underline-offset-4 transition-all"
                     >
@@ -259,9 +273,7 @@ const LoginModal = ({ isOpen, onClose }) => {
                   </p>
                 )}
                 {checkingAdmin && (
-                  <p className="text-gray-400 text-xs">
-                    Checking...
-                  </p>
+                  <p className="text-gray-400 text-xs">Checking...</p>
                 )}
               </div>
             </form>
@@ -286,13 +298,13 @@ const LoginModal = ({ isOpen, onClose }) => {
         isOpen={showResetPassword}
         onClose={handleResetPasswordClose}
         onSwitchToLogin={() => {
-          setShowResetPassword(false)
-          setShowForgotPassword(false)
+          setShowResetPassword(false);
+          setShowForgotPassword(false);
         }}
         email={resetEmail}
       />
     </>
-  )
-}
+  );
+};
 
-export default LoginModal
+export default LoginModal;
