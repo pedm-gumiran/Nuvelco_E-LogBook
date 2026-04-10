@@ -1,26 +1,31 @@
-import React, { useState } from 'react';
-import { FiRefreshCw, FiLoader } from 'react-icons/fi';
-import { toast } from 'react-toastify';
-import SearchBar from '../Input_Fields/SearchBar.jsx';
-import Button from '../Buttons/Button.jsx';
-import ItemCard from '../Cards/ItemCard.jsx';
+import React, { useState } from "react";
+import { FiRefreshCw, FiLoader } from "react-icons/fi";
+import { toast } from "react-toastify";
+import SearchBar from "../Input_Fields/SearchBar.jsx";
+import Button from "../Buttons/Button.jsx";
+import ItemCard from "../Cards/ItemCard.jsx";
 
-const SchoolView = ({ schools, internAttendance, onSchoolClick, onRefresh }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+const SchoolView = ({
+  schools,
+  internAttendance,
+  onSchoolClick,
+  onRefresh,
+}) => {
+  const [searchTerm, setSearchTerm] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     if (onRefresh) {
       await onRefresh();
-      toast.success('Data refreshed successfully');
+      toast.success("Intern data refreshed successfully");
     }
     setIsRefreshing(false);
   };
 
   // Filter schools based on search term
-  const filteredSchools = schools.filter(school =>
-    school.school_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSchools = schools.filter((school) =>
+    school.school_name?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -39,7 +44,13 @@ const SchoolView = ({ schools, internAttendance, onSchoolClick, onRefresh }) => 
           <Button
             label="Refresh"
             onClick={handleRefresh}
-            icon={isRefreshing ? <FiLoader className="w-3 h-3 sm:w-4 sm:h-4 animate-spin text-blue-600" /> : <FiRefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />}
+            icon={
+              isRefreshing ? (
+                <FiLoader className="w-3 h-3 sm:w-4 sm:h-4 animate-spin text-blue-600" />
+              ) : (
+                <FiRefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+              )
+            }
             variant="secondary"
             size="sm"
             disabled={isRefreshing}
@@ -60,7 +71,7 @@ const SchoolView = ({ schools, internAttendance, onSchoolClick, onRefresh }) => 
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredSchools.map(school => (
+          {filteredSchools.map((school) => (
             <ItemCard
               key={school.id}
               item={school}

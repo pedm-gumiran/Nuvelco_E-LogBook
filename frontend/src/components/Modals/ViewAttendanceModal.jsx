@@ -4,6 +4,7 @@ import {
   FiChevronRight,
   FiCalendar,
   FiClock,
+  FiFileText,
 } from "react-icons/fi";
 import Btn_X from "../Buttons/Btn_X.jsx";
 
@@ -26,6 +27,7 @@ const ViewAttendanceModal = ({
   activeTab,
   blobToBase64,
   handleViewImage,
+  onPreviewDtr,
 }) => {
   const [expandedMonths, setExpandedMonths] = useState({});
   const [expandedDates, setExpandedDates] = useState({});
@@ -350,6 +352,22 @@ const ViewAttendanceModal = ({
               </div>
             )}
           </div>
+
+          {/* Footer */}
+          {activeTab === "intern" && onPreviewDtr && (
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="flex items-center justify-end">
+                <button
+                  onClick={onPreviewDtr}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#188b3e] hover:bg-[#147a35] text-white rounded-lg transition-colors text-sm font-medium"
+                  title="Preview in DTR"
+                >
+                  <FiFileText className="w-4 h-4" />
+                  Preview in DTR
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

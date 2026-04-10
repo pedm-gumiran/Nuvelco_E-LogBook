@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   FiUsers,
   FiUserPlus,
-  FiFilter,
   FiDownload,
   FiTrash2,
   FiEye,
@@ -25,6 +24,8 @@ import Btn_X from "../../components/Buttons/Btn_X.jsx";
 import ExportFilenameModal from "../../components/Modals/ExportFilenameModal.jsx";
 import DeleteConfirmationModal from "../../components/Modals/DeleteConfirmationModal.jsx";
 import ViewAttendanceModal from "../../components/Modals/ViewAttendanceModal.jsx";
+import ViewModal from "../../components/Modals/ViewModal.jsx";
+import PreviewDtrModal from "../../components/Modals/PreviewDtrModal.jsx";
 import SchoolView from "../../components/Modals/SchoolView.jsx";
 import CourseView from "../../components/Modals/CourseView.jsx";
 import InternAttendanceModal from "../../components/Modals/InternAttendanceModal.jsx";
@@ -52,7 +53,8 @@ export default function Home_Page() {
 
   const parseLocalDate = (dateStr) => {
     if (!dateStr || typeof dateStr !== "string") return null;
-    const datePart = dateStr.split(" ")[0];
+    // Handle both "2026-04-07 08:24:08" and "2026-04-07T08:24:08.000Z" formats
+    const datePart = dateStr.split(/[ T]/)[0];
     const [year, month, day] = datePart.split("-").map(Number);
     if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
     return new Date(year, month - 1, day);
@@ -120,6 +122,8 @@ export default function Home_Page() {
 
   const [selectedRows, setSelectedRows] = useState([]);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isVisitorViewModalOpen, setIsVisitorViewModalOpen] = useState(false);
+  const [isPreviewDtrModalOpen, setIsPreviewDtrModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isResetExportModalOpen, setIsResetExportModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -776,10 +780,21 @@ export default function Home_Page() {
     }
   };
 
+  const handleViewVisitor = (record) => {
+    setSelectedRecord(record);
+    setIsVisitorViewModalOpen(true);
+  };
+
+  const handlePreviewDtr = () => {
+    setIsPreviewDtrModalOpen(true);
+  };
+
   const renderActions = (row) => (
     <div className="flex items-center justify-center gap-2">
       <button
-        onClick={() => handleView(row)}
+        onClick={() =>
+          activeTab === "intern" ? handleView(row) : handleViewVisitor(row)
+        }
         className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
         title="View Details"
       >
@@ -999,24 +1014,6 @@ export default function Home_Page() {
           )}
           {activeTab === "intern" ? (
             <div className="space-y-4">
-              <div className="flex justify-end mb-4">
-                <Button
-                  label="Refresh"
-                  onClick={handleInternRefresh}
-                  icon={
-                    isRefreshing ? (
-                      <FiLoader className="w-3 h-3 sm:w-4 sm:h-4 animate-spin text-blue-600" />
-                    ) : (
-                      <FiRefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
-                    )
-                  }
-                  variant="secondary"
-                  size="sm"
-                  disabled={isRefreshing}
-                  title="Refresh"
-                  hideLabelOnSmall
-                />
-              </div>
               <SchoolView
                 schools={getSchoolsWithAttendance()}
                 internAttendance={internAttendance}
@@ -1047,6 +1044,31 @@ export default function Home_Page() {
         activeTab={activeTab}
         blobToBase64={blobToBase64}
         handleViewImage={handleViewImage}
+        onPreviewDtr={handlePreviewDtr}
+      />
+      <ViewModal
+        isOpen={isVisitorViewModalOpen}
+        onClose={() => {
+          setIsVisitorViewModalOpen(false);
+          setSelectedRecord(null);
+        }}
+        data={selectedRecord || {}}
+        itemName="Visitor Attendance"
+        fields={[
+          { name: "name", label: "Name" },
+          { name: "date", label: "Date" },
+          { name: "timeIn", label: "Time In" },
+          { name: "purpose", label: "Purpose" },
+          { name: "address", label: "Address" },
+        ]}
+        size="md"
+      />
+      <ExportFilenameModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onConfirm={handleExportConfirm}
+        defaultName={`attendance_${new Date().toISOString().split("T")[0]}`}
+        itemName="Attendance Data"
       />
       <ExportFilenameModal
         isOpen={isResetExportModalOpen}
@@ -1168,6 +1190,16 @@ export default function Home_Page() {
         onRefresh={fetchAttendanceData}
         to12HourFormat={to12HourFormat}
         internColumns={internColumns}
+      />
+      <PreviewDtrModal
+        isOpen={isPreviewDtrModalOpen}
+        onClose={() => setIsPreviewDtrModalOpen(false)}
+        onCloseParent={() => {
+          setIsViewModalOpen(false);
+          setSelectedRecord(null);
+        }}
+        selectedRecord={selectedRecord}
+        attendanceRecords={getPersonAttendanceRecords()}
       />
     </div>
   );
