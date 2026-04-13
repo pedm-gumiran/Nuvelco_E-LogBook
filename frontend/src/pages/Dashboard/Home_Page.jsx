@@ -10,6 +10,7 @@ import {
   FiRefreshCw,
   FiX,
   FiLoader,
+  FiFileText,
 } from "react-icons/fi";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
@@ -29,6 +30,7 @@ import PreviewDtrModal from "../../components/Modals/PreviewDtrModal.jsx";
 import SchoolView from "../../components/Modals/SchoolView.jsx";
 import CourseView from "../../components/Modals/CourseView.jsx";
 import InternAttendanceModal from "../../components/Modals/InternAttendanceModal.jsx";
+import CertificateOfAppearanceModal from "../../components/Modals/CertificateOfAppearanceModal.jsx";
 import { formatDate } from "../../components/utility/dateFormatter.js";
 
 export default function Home_Page() {
@@ -133,6 +135,8 @@ export default function Home_Page() {
   const [selectedInternSchool, setSelectedInternSchool] = useState(null);
   const [selectedInternCourse, setSelectedInternCourse] = useState(null);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false);
+  const [certificateVisitorData, setCertificateVisitorData] = useState(null);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   const [isResetLoading, setIsResetLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -789,8 +793,36 @@ export default function Home_Page() {
     setIsPreviewDtrModalOpen(true);
   };
 
+  const handleGenerateCertificate = (record) => {
+    setCertificateVisitorData(record);
+    setIsCertificateModalOpen(true);
+  };
+
+  const handleCloseCertificateModal = () => {
+    setIsCertificateModalOpen(false);
+    setCertificateVisitorData(null);
+  };
+
+  const handleGenerateCertificateConfirm = async (visitorData, template) => {
+    // TODO: Implement actual certificate generation with selected template
+    toast.info(
+      `Generating certificate for ${visitorData.name} using ${template}...`,
+    );
+    // Add actual certificate generation logic here
+    console.log("Generating certificate:", { visitorData, template });
+  };
+
   const renderActions = (row) => (
     <div className="flex items-center justify-center gap-2">
+      {activeTab === "visitors" && (
+        <button
+          onClick={() => handleGenerateCertificate(row)}
+          className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+          title="Generate Certificate of Appearance"
+        >
+          <FiFileText className="w-4 h-4" />
+        </button>
+      )}
       <button
         onClick={() =>
           activeTab === "intern" ? handleView(row) : handleViewVisitor(row)
@@ -1200,6 +1232,12 @@ export default function Home_Page() {
         }}
         selectedRecord={selectedRecord}
         attendanceRecords={getPersonAttendanceRecords()}
+      />
+      <CertificateOfAppearanceModal
+        isOpen={isCertificateModalOpen}
+        onClose={handleCloseCertificateModal}
+        visitorData={certificateVisitorData}
+        onGenerate={handleGenerateCertificateConfirm}
       />
     </div>
   );

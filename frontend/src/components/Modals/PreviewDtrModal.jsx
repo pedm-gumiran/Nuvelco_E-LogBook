@@ -318,9 +318,26 @@ const PreviewDtrModal = ({
   const leftRows = Array.from({ length: 15 }, (_, i) => getDayData(i + 1));
   const rightRows = Array.from({ length: 16 }, (_, i) => getDayData(i + 16));
 
+  const calculateTotalSum = (rows) => {
+    let totalMinutes = 0;
+    rows.forEach((row) => {
+      if (row.hours) {
+        const [hh, mm] = row.hours.toString().split(".");
+        const h = parseInt(hh, 10) || 0;
+        const mStr = (mm || "0").padEnd(2, "0");
+        const m = parseInt(mStr, 10) || 0;
+        totalMinutes += h * 60 + m;
+      }
+    });
+    if (totalMinutes === 0) return "";
+    const totalH = Math.floor(totalMinutes / 60);
+    const totalM = totalMinutes % 60;
+    return `${totalH}.${totalM.toString().padStart(2, "0")}`;
+  };
+
   // Render DTR Table Column
-  const renderDtrTable = (rows, startDay) => (
-    <table className="w-full text-[10px] border-collapse">
+  const renderDtrTable = (rows, startDay, isLastTable = false) => (
+    <table className="w-full text-[20px] border-collapse">
       <thead>
         <tr className="bg-gray-100">
           <th
@@ -378,50 +395,72 @@ const PreviewDtrModal = ({
         </tr>
       </thead>
       <tbody>
-        {/* Empty row before day 1 (only for left side) */}
-        {startDay === 1 && (
-          <tr className="h-5">
-            <td className="border border-black px-1 py-0"></td>
-            <td className="border border-black px-1 py-0"></td>
-            <td className="border border-black px-1 py-0"></td>
-            <td className="border border-black px-1 py-0"></td>
-            <td className="border border-black px-1 py-0"></td>
-            <td className="border border-black px-1 py-0"></td>
-            <td className="border border-black px-1 py-0"></td>
-            <td className="border border-black px-1 py-0"></td>
-          </tr>
-        )}
         {rows.map((row, index) => {
           const day = startDay + index;
           return (
-            <tr key={day} className="h-5">
+            <tr key={day} className="h-6">
               <td className="border border-black px-1 py-0 text-center font-medium">
                 {day}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[9px]">
+              <td className="border border-black px-1 py-0 text-center text-[15px]">
                 {row.amIn}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[9px]">
+              <td className="border border-black px-1 py-0 text-center text-[15px]">
                 {row.amOut}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[9px]">
+              <td className="border border-black px-1 py-0 text-center text-[15px]">
                 {row.pmIn}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[9px]">
+              <td className="border border-black px-1 py-0 text-center text-[15px]">
                 {row.pmOut}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[9px]">
+              <td className="border border-black px-1 py-0 text-center text-[15px]">
                 {/* Overtime IN - placeholder */}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[9px]">
+              <td className="border border-black px-1 py-0 text-center text-[15px]">
                 {/* Overtime OUT - placeholder */}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[9px] font-medium">
+              <td className="border border-black px-1 py-0 text-center text-[15px] font-medium">
                 {row.hours}
               </td>
             </tr>
           );
         })}
+        {/* Total Sum Row - only on the right side block */}
+        {isLastTable && (
+          <tr className="h-6">
+            <td
+              colSpan="7"
+              className="border border-black px-2 py-0 text-right font-bold text-[15px]"
+            >
+              GRAND TOTAL HOURS
+            </td>
+            <td className="border border-black px-1 py-0 text-center text-[15px] font-bold">
+              {calculateTotalSum([...leftRows, ...rightRows])}
+            </td>
+          </tr>
+        )}
+
+        {/* Empty rows on the left side to perfectly match the height of the right side's extra rows */}
+        {!isLastTable && (
+          <>
+            <tr className="h-6">
+              <td className="border border-black px-1 py-0">&nbsp;</td>
+              <td className="border border-black px-1 py-0">&nbsp;</td>
+              <td className="border border-black px-1 py-0">&nbsp;</td>
+              <td className="border border-black px-1 py-0">&nbsp;</td>
+              <td className="border border-black px-1 py-0">&nbsp;</td>
+              <td className="border border-black px-1 py-0">&nbsp;</td>
+              <td className="border border-black px-1 py-0">&nbsp;</td>
+              <td className="border border-black px-1 py-0">&nbsp;</td>
+            </tr>
+            <tr className="h-6">
+              <td colSpan="8" className="border border-black px-1 py-0">
+                &nbsp;
+              </td>
+            </tr>
+          </>
+        )}
       </tbody>
     </table>
   );
@@ -565,71 +604,297 @@ const PreviewDtrModal = ({
             {/* DTR Form */}
             <div
               id="dtr-paper"
-              className="bg-white rounded-lg overflow-hidden p-4 print-container"
+              className="bg-white rounded-lg p-4 print-container"
+              style={{
+                position: "relative",
+                minHeight: "1122px",
+                paddingBottom: "80px",
+              }}
             >
+              {/* Nuvelco Paper Header */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "auto",
+                  marginBottom: "4px",
+                  marginLeft: "-16px",
+                  marginRight: "-16px",
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                }}
+              >
+                <img
+                  src="/system_logo.png"
+                  alt="Nuvelco Logo"
+                  style={{
+                    height: "80px",
+                    objectFit: "contain",
+                    flexShrink: 0,
+                  }}
+                />
+
+                {/* Nuvelco Center Title Image */}
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "0 8px",
+                  }}
+                >
+                  <img
+                    src="/Nuvelco_title.png"
+                    alt="Nuvelco Title"
+                    style={{
+                      height: "80px",
+                      width: "100%",
+                      objectFit: "contain",
+                      objectPosition: "left center",
+                    }}
+                  />
+                </div>
+
+                <img
+                  src="/nuvelco_establishment.png"
+                  alt="Nuvelco Establishment"
+                  style={{
+                    height: "80px",
+                    objectFit: "contain",
+                    flexShrink: 0,
+                  }}
+                />
+              </div>
+
+              {/* Motto and Green lines */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  width: "auto",
+                  marginLeft: "-16px",
+                  marginRight: "-16px",
+                  marginBottom: "16px",
+                }}
+              >
+                <div
+                  style={{
+                    flex: 1,
+                    borderTop: "3px solid #168e3f",
+                    borderBottom: "1px solid #168e3f",
+                    height: "5px",
+                    minWidth: "20px",
+                  }}
+                ></div>
+                <div
+                  style={{
+                    padding: "0 12px",
+                    color: "#74d3a6",
+                    fontStyle: "italic",
+                    fontFamily:
+                      '"Brush Script MT", "Brush Script Std", "Lucida Calligraphy", "Lucida Handwriting", "Apple Chancery", cursive',
+                    fontSize: "22px",
+                    fontWeight: "500",
+                    letterSpacing: "0.5px",
+                    textShadow: "1px 1px 0px rgba(255,255,255,0.5)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  "Basta sama-sama, kaya."
+                </div>
+                <div
+                  style={{
+                    width: "40px",
+                    borderTop: "3px solid #168e3f",
+                    borderBottom: "1px solid #168e3f",
+                    height: "5px",
+                  }}
+                ></div>
+              </div>
+
+              {/* DTR Title - centered below header */}
+              <div style={{ textAlign: "center", margin: "10px 0 8px" }}>
+                <div
+                  style={{
+                    fontWeight: "800",
+                    fontSize: "20px",
+                    letterSpacing: "0.5px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  DAILY TIME RECORD
+                </div>
+                <div style={{ fontSize: "15px", marginTop: "2px" }}>
+                  (On the Job Training)
+                </div>
+              </div>
+
               {/* DTR Header Info */}
-              <div className="flex justify-between items-start mb-2 text-xs">
-                <div className="space-y-0.5">
-                  <div>
-                    <strong>Name:</strong> {selectedRecord.name}
-                  </div>
-                  <div>
-                    <strong>School:</strong> {selectedRecord.school || "N/A"}
-                  </div>
+              <div
+                className="mb-2 text-xs space-y-0.5"
+                style={{ fontSize: "15px" }}
+              >
+                <div>
+                  <strong>Name:</strong> {selectedRecord.name}
                 </div>
-                <div className="text-center">
-                  <div className="font-bold text-sm">DAILY TIME RECORD</div>
-                  <div className="text-[10px]">(On the job Training)</div>
+                <div>
+                  <strong>School:</strong> {selectedRecord.school || "N/A"}
                 </div>
-                <div className="space-y-0.5 text-right">
-                  <div>
-                    <strong>Course:</strong> {selectedRecord.course || "Intern"}
-                  </div>
-                  <div>
-                    <strong>Month:</strong> {monthName}
-                  </div>
+                <div>
+                  <strong>Course:</strong> {selectedRecord.course || "Intern"}
+                </div>
+                <div>
+                  <strong>Month:</strong> {monthName}
                 </div>
               </div>
 
               {/* Two Column DTR Tables */}
-              <div className="flex gap-4">
+              <div className="flex gap-4 mt-6">
                 {/* Left Side - Days 1-15 */}
                 <div className="flex-1">
-                  {renderDtrTable(leftRows, 1)}
-                  {/* Certification Statement for Left Side */}
-                  <div className="mt-4 text-center text-xs">
-                    <p>
-                      I hereby certify that the above records are true and
-                      correct.
-                    </p>
-                    <div className="mt-2 flex justify-center gap-4">
-                      <div className="text-center">
-                        <div className="border-t border-black w-40 mt-4"></div>
-                        <div className="text-xs font-semibold mt-1">
-                          EMPLOYEE'S SIGNATURE
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  {renderDtrTable(leftRows, 1, false)}
                 </div>
 
                 {/* Right Side - Days 16-31 */}
                 <div className="flex-1">
-                  {renderDtrTable(rightRows, 16)}
-                  {/* Certification Statement for Right Side */}
-                  <div className="mt-4 text-center text-xs">
-                    <p>
-                      I hereby certify that the above records are true and
-                      correct.
-                    </p>
-                    <div className="mt-2 flex justify-center gap-4">
-                      <div className="text-center">
-                        <div className="border-t border-black w-40 mt-4"></div>
-                        <div className="text-xs font-semibold mt-1">
-                          EMPLOYEE'S SIGNATURE
-                        </div>
-                      </div>
-                    </div>
+                  {renderDtrTable(rightRows, 16, true)}
+                </div>
+              </div>
+
+              {/* Centered Certification Statement */}
+              <div
+                className="mt-30 text-center text-xs w-full relative"
+                style={{ marginTop: "30px" }}
+              >
+                {/* Empty element to act as the requested empty row before the certification */}
+                <div className="h-6"></div>
+                <p className="text-center" style={{ fontSize: "15px" }}>
+                  I hereby certify that the above records are true and correct.
+                </p>
+                <div className="mt-16 block w-full text-center">
+                  <div
+                    style={{
+                      marginTop: "60px",
+                      borderTop: "1px solid black",
+                      width: "300px",
+                      margin: "0 auto",
+                    }}
+                  ></div>
+                  <div
+                    style={{
+                      marginTop: "12px",
+                      fontWeight: "600",
+                      fontSize: "15px",
+                      textAlign: "center",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      display: "block",
+                    }}
+                  >
+                    EMPLOYEE'S SIGNATURE
+                  </div>
+                </div>
+              </div>
+
+              {/* Document Footer - Contact Info */}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "0",
+                  left: "0",
+                  right: "0",
+                }}
+              >
+                {/* Double green line */}
+                <div
+                  style={{
+                    borderTop: "3px solid #168e3f",
+                    borderBottom: "1px solid #168e3f",
+                    height: "5px",
+                    width: "100%",
+                  }}
+                ></div>
+                {/* Contact info row */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "32px",
+                    padding: "10px 0",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {/* Website */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontSize: "11px",
+                      color: "#333",
+                    }}
+                  >
+                    <img
+                      src="/globe.png"
+                      alt="Website"
+                      style={{
+                        width: "22px",
+                        height: "22px",
+                        objectFit: "contain",
+                      }}
+                    />
+                    <span style={{ color: "#555" }}>|</span>
+                    <span>www.nuvelco.com</span>
+                  </div>
+                  {/* Email */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontSize: "11px",
+                    }}
+                  >
+                    <img
+                      src="/email.png"
+                      alt="Email"
+                      style={{
+                        width: "22px",
+                        height: "22px",
+                        objectFit: "contain",
+                      }}
+                    />
+                    <span style={{ color: "#555" }}>|</span>
+                    <a
+                      href="mailto:hq@nuvelco.com"
+                      style={{ color: "#1a56db", textDecoration: "none" }}
+                    >
+                      hq@nuvelco.com
+                    </a>
+                  </div>
+                  {/* Phone */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontSize: "11px",
+                      color: "#333",
+                    }}
+                  >
+                    <img
+                      src="/Telephone.png"
+                      alt="Phone"
+                      style={{
+                        width: "22px",
+                        height: "22px",
+                        objectFit: "contain",
+                      }}
+                    />
+                    <span style={{ color: "#555" }}>|</span>
+                    <span>0917-312-5775</span>
                   </div>
                 </div>
               </div>

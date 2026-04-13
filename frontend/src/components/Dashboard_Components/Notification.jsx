@@ -9,6 +9,8 @@ import { FaBell } from "react-icons/fa";
  * @param {function} onMarkAllAsRead - Function to mark all notifications as read
  * @param {function} onDelete - Function to delete a notification
  */
+const DELETED_NOTIFICATIONS_KEY = "deletedNotificationIds";
+
 const Notification = ({
   notifications = [],
   onMarkAsRead,
@@ -18,8 +20,40 @@ const Notification = ({
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [hiddenReadIds, setHiddenReadIds] = useState(new Set());
+  const [deletedIds, setDeletedIds] = useState(new Set());
   const dropdownRef = useRef(null);
   const readTimersRef = useRef({});
+
+  // Load deleted notifications from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(DELETED_NOTIFICATIONS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setDeletedIds(new Set(parsed));
+      }
+    } catch (e) {
+      console.error("Error loading deleted notifications:", e);
+    }
+  }, []);
+
+  // Handle delete with persistence
+  const handleDelete = (notificationId) => {
+    // Add to deleted IDs
+    setDeletedIds((prev) => {
+      const newSet = new Set([...prev, notificationId]);
+      localStorage.setItem(
+        DELETED_NOTIFICATIONS_KEY,
+        JSON.stringify([...newSet]),
+      );
+      return newSet;
+    });
+
+    // Call original onDelete if provided
+    if (onDelete) {
+      onDelete(notificationId);
+    }
+  };
 
   // Clear timers on unmount
   useEffect(() => {
@@ -56,8 +90,10 @@ const Notification = ({
 
   // Filter and sort notifications - unread first, then read
   const filteredNotifications = useMemo(() => {
-    // First filter by tab and exclude hidden read notifications
+    // First filter by tab, deleted IDs, and exclude hidden read notifications
     let filtered = notifications.filter((n) => {
+      // Hide deleted notifications
+      if (deletedIds.has(n.id)) return false;
       // Hide read notifications that have been hidden
       if (n.read && hiddenReadIds.has(n.id)) return false;
       // Filter by tab
@@ -76,7 +112,7 @@ const Notification = ({
       }
       return a.read ? 1 : -1;
     });
-  }, [notifications, activeTab, hiddenReadIds]);
+  }, [notifications, activeTab, hiddenReadIds, deletedIds]);
 
   // Count all unread notifications (regardless of active tab)
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -246,18 +282,16 @@ const Notification = ({
                       </p>
                     </div>
                     {/* Delete Button */}
-                    {onDelete && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(notification.id);
-                        }}
-                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                        title="Delete"
-                      >
-                        <span className="text-xs">✕</span>
-                      </button>
-                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(notification.id);
+                      }}
+                      className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                      title="Delete"
+                    >
+                      <span className="text-xs">✕</span>
+                    </button>
                   </div>
                 </div>
               ))
