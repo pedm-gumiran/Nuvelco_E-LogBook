@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { FaBell } from "react-icons/fa";
 
 /**
@@ -17,17 +17,66 @@ const Notification = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const [hiddenReadIds, setHiddenReadIds] = useState(new Set());
   const dropdownRef = useRef(null);
+  const readTimersRef = useRef({});
 
-  // Filter notifications by tab
-  const filteredNotifications = notifications.filter((n) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "intern") return n.type === "intern";
-    if (activeTab === "school-course")
-      return n.type === "school" || n.type === "course";
-    if (activeTab === "visitor") return n.type === "visitor";
-    return true;
-  });
+  // Clear timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(readTimersRef.current).forEach(clearTimeout);
+    };
+  }, []);
+
+  // Handle marking as read with auto-hide timer
+  const handleMarkAsRead = (notificationId) => {
+    if (onMarkAsRead) {
+      onMarkAsRead(notificationId);
+      // Set timer to hide this read notification after 1 minute
+      readTimersRef.current[notificationId] = setTimeout(() => {
+        setHiddenReadIds((prev) => new Set([...prev, notificationId]));
+      }, 60000); // 1 minute
+    }
+  };
+
+  // Handle mark all as read
+  const handleMarkAllAsRead = () => {
+    if (onMarkAllAsRead) {
+      onMarkAllAsRead();
+      // Set timers for all unread notifications
+      notifications.forEach((n) => {
+        if (!n.read) {
+          readTimersRef.current[n.id] = setTimeout(() => {
+            setHiddenReadIds((prev) => new Set([...prev, n.id]));
+          }, 60000);
+        }
+      });
+    }
+  };
+
+  // Filter and sort notifications - unread first, then read
+  const filteredNotifications = useMemo(() => {
+    // First filter by tab and exclude hidden read notifications
+    let filtered = notifications.filter((n) => {
+      // Hide read notifications that have been hidden
+      if (n.read && hiddenReadIds.has(n.id)) return false;
+      // Filter by tab
+      if (activeTab === "all") return true;
+      if (activeTab === "intern") return n.type === "intern";
+      if (activeTab === "school-course")
+        return n.type === "school" || n.type === "course";
+      if (activeTab === "visitor") return n.type === "visitor";
+      return true;
+    });
+
+    // Sort: unread first, then by time (newest first)
+    return filtered.sort((a, b) => {
+      if (a.read === b.read) {
+        return new Date(b.time) - new Date(a.time);
+      }
+      return a.read ? 1 : -1;
+    });
+  }, [notifications, activeTab, hiddenReadIds]);
 
   // Count all unread notifications (regardless of active tab)
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -42,6 +91,28 @@ const Notification = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Disable background scroll when dropdown is open
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      window.scrollTo(0, parseInt(scrollY || "0") * -1);
+    }
+  }, [isOpen]);
 
   // Format time to 12-hour with AM/PM (no seconds)
   const formatTime = (time) => {
@@ -83,7 +154,7 @@ const Notification = ({
             {unreadCount > 0 && onMarkAllAsRead && (
               <button
                 onClick={() => {
-                  onMarkAllAsRead();
+                  handleMarkAllAsRead();
                 }}
                 className="text-xs text-[#188b3e] hover:underline font-medium"
               >
@@ -151,8 +222,8 @@ const Notification = ({
                     !notification.read ? "bg-blue-50/50" : ""
                   }`}
                   onClick={() => {
-                    if (!notification.read && onMarkAsRead) {
-                      onMarkAsRead(notification.id);
+                    if (!notification.read) {
+                      handleMarkAsRead(notification.id);
                     }
                   }}
                 >

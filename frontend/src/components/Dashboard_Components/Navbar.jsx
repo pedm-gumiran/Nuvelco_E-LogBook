@@ -155,10 +155,10 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
     }
   };
 
-  // Fetch notifications on mount and every 30 seconds
+  // Fetch notifications on mount and every 10 seconds
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // Refresh every 30 seconds
+    const interval = setInterval(fetchNotifications, 10000); // Refresh every 10 seconds
     return () => clearInterval(interval);
   }, []);
 

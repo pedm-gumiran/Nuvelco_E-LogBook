@@ -3,6 +3,7 @@ import QRScanner from "../Input_Fields/QRScanner.jsx";
 import RegisterUserModal from "./RegisterUserModal.jsx";
 import SummaryModal from "./SummaryModal.jsx";
 import CameraCaptureModal from "./CameraCaptureModal.jsx";
+import ManualInternSearchModal from "./ManualInternSearchModal.jsx";
 import Input_Text from "../Input_Fields/Input_Text.jsx";
 import { speak } from "../utility/speechSynthesizer.js";
 import {
@@ -12,6 +13,8 @@ import {
   FiTrendingUp,
   FiUserPlus,
   FiAlertCircle,
+  FiSearch,
+  FiX,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import Btn_X from "../Buttons/Btn_X.jsx";
@@ -29,6 +32,10 @@ const AttendanceModal = ({ isOpen, onClose }) => {
     purpose: "",
     address: "",
   });
+
+  // Manual intern search modal state
+  const [showManualSearchModal, setShowManualSearchModal] = useState(false);
+
   const [attendanceData, setAttendanceData] = useState({
     todayStats: { total: 0, faculty: 0, visitors: 0 },
     weeklyStats: { visitors: 0 },
@@ -46,6 +53,49 @@ const AttendanceModal = ({ isOpen, onClose }) => {
   const [pendingIntern, setPendingIntern] = useState(null);
   const [pendingScanData, setPendingScanData] = useState(null);
   const [isCameraSaving, setIsCameraSaving] = useState(false);
+
+  // Open manual search modal
+  const openManualSearchModal = () => {
+    setShowManualSearchModal(true);
+  };
+
+  // Close manual search modal
+  const closeManualSearchModal = () => {
+    setShowManualSearchModal(false);
+  };
+
+  // Handle intern selection from manual search modal
+  const handleManualInternSelect = async (intern) => {
+    setLoading(true);
+    try {
+      // Check if intern can record attendance
+      const checkResult = await checkInternAttendanceStatus(intern.id);
+      if (checkResult && !checkResult.canRecord) {
+        toast.error(checkResult.message || "Attendance already completed");
+        return;
+      }
+
+      // Show camera capture modal for manual entry
+      const personName = `${intern.first_name} ${intern.last_name}`;
+      setPendingIntern({
+        id: intern.id,
+        name: personName,
+      });
+      setPendingScanData({
+        originalData: intern.id,
+        personName,
+        personType: "intern",
+        isManual: true,
+      });
+      setShowCameraModal(true);
+      setShowManualSearchModal(false);
+    } catch (error) {
+      console.error("Manual attendance error:", error);
+      toast.error(error.message || "Failed to process attendance");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Cancel any ongoing speech synthesis
   const cancelPreviousSpeech = () => {
@@ -106,10 +156,9 @@ const AttendanceModal = ({ isOpen, onClose }) => {
   };
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 2000);
-    return () => clearInterval(timer);
+    fetchAttendanceData();
+    const interval = setInterval(fetchAttendanceData, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -748,12 +797,14 @@ const AttendanceModal = ({ isOpen, onClose }) => {
                     <div className="relative w-full h-full rounded-xl overflow-hidden">
                       <QRScanner
                         onScanComplete={handleQRScan}
+                        onManualSearch={openManualSearchModal}
                         className="w-full h-full"
                         isOpen={isOpen}
                         disabled={
                           showRegisterUser ||
                           showSummary ||
                           showCameraModal ||
+                          showManualSearchModal ||
                           isCameraSaving ||
                           (scannedData && typeof scannedData === "object")
                         }
@@ -1116,6 +1167,14 @@ const AttendanceModal = ({ isOpen, onClose }) => {
         }}
         data={newlyRegisteredVisitor}
         autoCloseSeconds={30}
+      />
+
+      {/* Manual Intern Search Modal */}
+      <ManualInternSearchModal
+        isOpen={showManualSearchModal}
+        onClose={closeManualSearchModal}
+        onSelectIntern={handleManualInternSelect}
+        loading={loading}
       />
     </div>
   );
