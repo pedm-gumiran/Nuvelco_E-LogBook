@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react'
-import Button from '../Buttons/Button.jsx'
-import Btn_X from '../Buttons/Btn_X.jsx'
-import Input_Text from '../Input_Fields/Input_Text.jsx'
-import Input_Password from '../Input_Fields/Input_Password.jsx'
-import Dropdown from '../Input_Fields/Dropdown.jsx'
-import TextArea from '../Input_Fields/TextArea.jsx'
+import React, { useState, useEffect } from "react";
+import Button from "../Buttons/Button.jsx";
+import Btn_X from "../Buttons/Btn_X.jsx";
+import Input_Text from "../Input_Fields/Input_Text.jsx";
+import Input_Password from "../Input_Fields/Input_Password.jsx";
+import Dropdown from "../Input_Fields/Dropdown.jsx";
+import TextArea from "../Input_Fields/TextArea.jsx";
 
 /**
  * AddModal - A dedicated modal for adding new records
- * 
+ *
  * @param {boolean} isOpen - Whether the modal is visible
  * @param {function} onClose - Function to close the modal
  * @param {function} onSubmit - Function called when form is submitted
@@ -16,219 +16,144 @@ import TextArea from '../Input_Fields/TextArea.jsx'
  * @param {Array} fields - Array of field configurations
  *   Each field: { name, label, type, placeholder, required, options (for select) }
  * @param {string} size - Modal size: 'sm', 'md', 'lg', 'xl'
+ * @param {string} submitLabel - Label for the submit button (default: 'Save')
  */
 const AddModal = ({
   isOpen,
   onClose,
   onSubmit,
-  itemName = 'Item',
+  itemName = "Item",
   fields = [],
-  size = 'md',
-  initialData = {}
+  size = "md",
+  initialData = {},
+  submitLabel = "Save",
 }) => {
-  const [formData, setFormData] = useState({})
-  const [errors, setErrors] = useState({})
-  const [isLoading, setIsLoading] = useState(false)
+  const [formData, setFormData] = useState({});
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Disable scroll when modal is open
+  // Track previous isOpen to detect when modal just opened
+  const prevIsOpenRef = React.useRef(false);
+
+  // Disable scroll when modal is open and initialize form only on open
   useEffect(() => {
     if (isOpen) {
-      const scrollY = window.scrollY
-      document.body.style.position = 'fixed'
-      document.body.style.top = `-${scrollY}px`
-      document.body.style.left = '0'
-      document.body.style.right = '0'
-      document.body.style.width = '100%'
-      document.body.style.overflow = 'hidden'
-      
-      // Initialize form with default values and initial data
-      const defaults = { ...initialData }
-      fields.forEach(field => {
-        if (field.defaultValue && !defaults[field.name]) {
-          defaults[field.name] = field.defaultValue
-        }
-      })
-      setFormData(defaults)
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+
+      // Only initialize form data when modal first opens (not on re-renders)
+      if (!prevIsOpenRef.current) {
+        const defaults = { ...initialData };
+        fields.forEach((field) => {
+          if (field.defaultValue && !defaults[field.name]) {
+            defaults[field.name] = field.defaultValue;
+          }
+        });
+        setFormData(defaults);
+        setErrors({});
+      }
     } else {
-      const scrollY = document.body.style.top
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-      document.body.style.width = ''
-      document.body.style.overflow = ''
-      window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      window.scrollTo(0, parseInt(scrollY || "0") * -1);
     }
+    prevIsOpenRef.current = isOpen;
     return () => {
-      const scrollY = document.body.style.top
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-      document.body.style.width = ''
-      document.body.style.overflow = ''
-      window.scrollTo(0, parseInt(scrollY || '0') * -1)
-    }
-  }, [isOpen, fields])
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      window.scrollTo(0, parseInt(scrollY || "0") * -1);
+    };
+  }, [isOpen]);
 
   // Size classes mapping
   const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl'
-  }
+    sm: "max-w-md",
+    md: "max-w-lg",
+    lg: "max-w-2xl",
+    xl: "max-w-4xl",
+  };
 
   // Handle input change
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
-    setFormData(prev => ({
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
+      [name]: type === "checkbox" ? checked : value,
+    }));
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }))
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
-  }
+  };
 
   // Validate form
   const validateForm = () => {
-    const newErrors = {}
-    fields.forEach(field => {
+    const newErrors = {};
+    fields.forEach((field) => {
       if (field.required && !formData[field.name]) {
-        newErrors[field.name] = `${field.label || field.name} is required`
+        newErrors[field.name] = `${field.label || field.name} is required`;
       }
-      if (field.type === 'email' && formData[field.name]) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (field.type === "email" && formData[field.name]) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formData[field.name])) {
-          newErrors[field.name] = 'Please enter a valid email address'
+          newErrors[field.name] = "Please enter a valid email address";
         }
       }
-    })
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (validateForm()) {
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        await onSubmit(formData)
+        await onSubmit(formData);
         // Only close after successful submission
-        setFormData(initialData)
-        setErrors({})
-        onClose()
+        setFormData(initialData);
+        setErrors({});
+        onClose();
       } catch (error) {
         // Keep modal open on error
-        console.error('Submit error:', error)
+        console.error("Submit error:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
-  }
+  };
 
   // Handle close
   const handleClose = () => {
-    setFormData(initialData)
-    setErrors({})
-    onClose()
-  }
+    setFormData(initialData);
+    setErrors({});
+    onClose();
+  };
 
-  // Render input field using pre-built components
-  const renderField = (field) => {
-    const { name, label, type = 'text', placeholder, required, options = [], disabled } = field
-    const value = formData[name] || ''
-    const fieldLabel = (
-      <>
-        {label || name}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </>
-    )
+  if (!isOpen) return null;
 
-    switch (type) {
-      case 'select':
-        return (
-          <div className="flex flex-col gap-1" key={name}>
-            <Dropdown
-              id={name}
-              name={name}
-              label={fieldLabel}
-              value={value}
-              onChange={handleChange}
-              options={options.map(opt => ({
-                value: typeof opt === 'object' ? opt.value : opt,
-                label: typeof opt === 'object' ? opt.label : opt
-              }))}
-              placeholder={`Select ${label || name}...`}
-              disabled={disabled}
-              required={required}
-              className={errors[name] ? 'border-red-500' : ''}
-            />
-            {errors[name] && <span className="text-xs text-red-500">{errors[name]}</span>}
-          </div>
-        )
-
-      case 'textarea':
-        return (
-          <div className="flex flex-col gap-1" key={name}>
-            <TextArea
-              id={name}
-              name={name}
-              label={fieldLabel}
-              value={value}
-              onChange={handleChange}
-              placeholder={placeholder || `Enter ${label || name}...`}
-              disabled={disabled}
-              required={required}
-              rows={4}
-              resize="none"
-              text_ClassName={errors[name] ? 'border-red-500' : ''}
-            />
-            {errors[name] && <span className="text-xs text-red-500">{errors[name]}</span>}
-          </div>
-        )
-
-      case 'password':
-        return (
-          <div className="flex flex-col gap-1" key={name}>
-            <Input_Password
-              name={name}
-              label={fieldLabel}
-              value={value}
-              onChange={handleChange}
-              placeholder={placeholder || `Enter ${label || name}...`}
-              disabled={disabled}
-              required={required}
-              password_className={errors[name] ? 'border-red-500' : ''}
-            />
-            {errors[name] && <span className="text-xs text-red-500">{errors[name]}</span>}
-          </div>
-        )
-
-      default:
-        return (
-          <div className="flex flex-col gap-1" key={name}>
-            <Input_Text
-              id={name}
-              name={name}
-              label={fieldLabel}
-              type={type}
-              value={value}
-              onChange={handleChange}
-              placeholder={placeholder || `Enter ${label || name}...`}
-              required={required}
-              disabled={disabled}
-              text_ClassName={`${errors[name] ? 'border-red-500' : ''} ${disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
-            />
-            {errors[name] && <span className="text-xs text-red-500">{errors[name]}</span>}
-          </div>
-        )
-    }
-  }
-
-  if (!isOpen) return null
+  // Helper to get field label
+  const getFieldLabel = (field) => (
+    <>
+      {field.label || field.name}
+      {field.required && <span className="text-red-500 ml-1">*</span>}
+    </>
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center ">
@@ -236,19 +161,148 @@ const AddModal = ({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
       {/* Modal */}
-      <div className={`relative w-full ${sizeClasses[size]} mx-4 bg-white rounded-3xl shadow-2xl animate-fadeIn flex flex-col max-h-[85vh]`}>
+      <div
+        className={`relative w-full ${sizeClasses[size]} mx-4 bg-white rounded-3xl shadow-2xl animate-fadeIn flex flex-col max-h-[85vh]`}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 shrink-0 rounded-t-3xl">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold text-white">Add New {itemName}</h2>
+            <h2 className="text-lg font-semibold text-white">
+              Add New {itemName}
+            </h2>
           </div>
-          <Btn_X onClick={handleClose} className="p-2 hover:bg-white/20 rounded-full transition-colors text-white/80 hover:text-white" />
+          <Btn_X
+            onClick={handleClose}
+            className="p-2 hover:bg-white/20 rounded-full transition-colors text-white/80 hover:text-white"
+          />
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} className="p-6 flex-1 min-h-0 overflow-y-auto">
-          <div className={`grid gap-4 ${fields.length > 6 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
-            {fields.filter(field => !field.hidden).map(field => renderField(field))}
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 flex-1 min-h-0 overflow-y-auto"
+        >
+          <div
+            className={`grid gap-4 ${fields.length > 6 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}
+          >
+            {fields
+              .filter((field) => !field.hidden)
+              .map((field) => {
+                const {
+                  name,
+                  type = "text",
+                  placeholder,
+                  required,
+                  options = [],
+                  disabled,
+                } = field;
+                const value = formData[name] || "";
+                const fieldLabel = getFieldLabel(field);
+
+                if (type === "select") {
+                  return (
+                    <div className="flex flex-col gap-1" key={name}>
+                      <Dropdown
+                        id={name}
+                        name={name}
+                        label={fieldLabel}
+                        value={value}
+                        onChange={handleChange}
+                        options={options.map((opt) => ({
+                          value: typeof opt === "object" ? opt.value : opt,
+                          label: typeof opt === "object" ? opt.label : opt,
+                        }))}
+                        placeholder={`Select ${field.label || name}...`}
+                        disabled={disabled}
+                        required={required}
+                        className={errors[name] ? "border-red-500" : ""}
+                      />
+                      {errors[name] && (
+                        <span className="text-xs text-red-500">
+                          {errors[name]}
+                        </span>
+                      )}
+                    </div>
+                  );
+                }
+
+                if (type === "textarea") {
+                  return (
+                    <div className="flex flex-col gap-1" key={name}>
+                      <TextArea
+                        id={name}
+                        name={name}
+                        label={fieldLabel}
+                        value={value}
+                        onChange={handleChange}
+                        placeholder={
+                          placeholder || `Enter ${field.label || name}...`
+                        }
+                        disabled={disabled}
+                        required={required}
+                        rows={4}
+                        resize="none"
+                        text_ClassName={errors[name] ? "border-red-500" : ""}
+                      />
+                      {errors[name] && (
+                        <span className="text-xs text-red-500">
+                          {errors[name]}
+                        </span>
+                      )}
+                    </div>
+                  );
+                }
+
+                if (type === "password") {
+                  return (
+                    <div className="flex flex-col gap-1" key={name}>
+                      <Input_Password
+                        name={name}
+                        label={fieldLabel}
+                        value={value}
+                        onChange={handleChange}
+                        placeholder={
+                          placeholder || `Enter ${field.label || name}...`
+                        }
+                        disabled={disabled}
+                        required={required}
+                        password_className={
+                          errors[name] ? "border-red-500" : ""
+                        }
+                      />
+                      {errors[name] && (
+                        <span className="text-xs text-red-500">
+                          {errors[name]}
+                        </span>
+                      )}
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="flex flex-col gap-1" key={name}>
+                    <Input_Text
+                      id={name}
+                      name={name}
+                      label={fieldLabel}
+                      type={type}
+                      value={value}
+                      onChange={handleChange}
+                      placeholder={
+                        placeholder || `Enter ${field.label || name}...`
+                      }
+                      required={required}
+                      disabled={disabled}
+                      text_ClassName={`${errors[name] ? "border-red-500" : ""} ${disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
+                    />
+                    {errors[name] && (
+                      <span className="text-xs text-red-500">
+                        {errors[name]}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
           </div>
         </form>
 
@@ -267,9 +321,9 @@ const AddModal = ({
                 variant="primary"
                 onClick={handleSubmit}
                 type="submit"
-                label="Save"
+                label={submitLabel}
                 isLoading={isLoading}
-                loadingText="Saving..."
+                loadingText={`${submitLabel}...`}
               />
             </div>
           </div>
@@ -284,7 +338,7 @@ const AddModal = ({
         .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
       `}</style>
     </div>
-  )
-}
+  );
+};
 
-export default AddModal
+export default AddModal;

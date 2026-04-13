@@ -1,47 +1,60 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { FiUsers, FiClock, FiCheckCircle, FiArrowRight, FiShield, FiBarChart2, FiActivity, FiArrowUp, FiCode, FiDownload, FiMail, FiCamera } from 'react-icons/fi'
-import { FaQrcode } from 'react-icons/fa'
-import Button from '../../components/Buttons/Button.jsx'
-import LoginModal from '../../components/Modals/LoginModal.jsx'
-import AttendanceModal from '../../components/modals/AttendanceModal.jsx'
-import DeveloperModal from '../../components/modals/DeveloperModal.jsx'
-import System_Logo from '../../components/Logo/System_Logo.jsx'
-import Client_Logo from '../../components/Logo/Client_Logo.jsx'
+import React, { useState, useEffect, useRef } from "react";
+import {
+  FiUsers,
+  FiClock,
+  FiCheckCircle,
+  FiArrowRight,
+  FiShield,
+  FiBarChart2,
+  FiActivity,
+  FiArrowUp,
+  FiCode,
+  FiDownload,
+  FiMail,
+  FiCamera,
+} from "react-icons/fi";
+import { FaQrcode } from "react-icons/fa";
+import Button from "../../components/Buttons/Button.jsx";
+import LoginModal from "../../components/Modals/LoginModal.jsx";
+import AttendanceModal from "../../components/modals/AttendanceModal.jsx";
+import DeveloperModal from "../../components/modals/DeveloperModal.jsx";
+import System_Logo from "../../components/Logo/System_Logo.jsx";
+import Client_Logo from "../../components/Logo/Client_Logo.jsx";
 
 const LandingPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [showBackToTop, setShowBackToTop] = useState(false)
-  const [isDeveloperModalOpen, setIsDeveloperModalOpen] = useState(false)
-  const mobileMenuRef = useRef(null)
-  const mobileMenuButtonRef = useRef(null)
-  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [isDeveloperModalOpen, setIsDeveloperModalOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
+  const mobileMenuButtonRef = useRef(null);
+
   // Close mobile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        mobileMenuRef.current && 
+        mobileMenuRef.current &&
         !mobileMenuRef.current.contains(event.target) &&
         mobileMenuButtonRef.current &&
         !mobileMenuButtonRef.current.contains(event.target)
       ) {
-        setIsMobileMenuOpen(false)
+        setIsMobileMenuOpen(false);
       }
-    }
+    };
 
     if (isMobileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isMobileMenuOpen])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
   useEffect(() => {
     // Hide scrollbar styles
-    const style = document.createElement('style')
-    style.setAttribute('data-scrollbar-hide', 'true')
+    const style = document.createElement("style");
+    style.setAttribute("data-scrollbar-hide", "true");
     style.textContent = `
       /* Hide all scrollbars */
       *::-webkit-scrollbar {
@@ -63,82 +76,88 @@ const LandingPage = () => {
         -ms-overflow-style: none !important;
         scrollbar-width: none !important;
       }
-    `
-    document.head.appendChild(style)
+    `;
+    document.head.appendChild(style);
 
     return () => {
       // Clean up style on unmount
-      const existingStyle = document.querySelector('style[data-scrollbar-hide]')
+      const existingStyle = document.querySelector(
+        "style[data-scrollbar-hide]",
+      );
       if (existingStyle) {
-        existingStyle.remove()
+        existingStyle.remove();
       }
-    }
-  }, [])
-  
-  const openModal = () => setIsModalOpen(true)
-  const closeModal = () => setIsModalOpen(false)
-  
-  const openAttendanceModal = () => setIsAttendanceModalOpen(true)
-  const closeAttendanceModal = () => setIsAttendanceModalOpen(false)
+    };
+  }, []);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  const openAttendanceModal = () => setIsAttendanceModalOpen(true);
+  const closeAttendanceModal = () => setIsAttendanceModalOpen(false);
 
   const handleStartAttendance = () => {
-    navigate('/attendance')
-  }
+    navigate("/attendance");
+  };
 
   // Show/hide back to top button based on scroll position
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 300) {
-        setShowBackToTop(true)
+        setShowBackToTop(true);
       } else {
-        setShowBackToTop(false)
+        setShowBackToTop(false);
       }
-    }
+    };
 
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
-    })
-  }
+      behavior: "smooth",
+    });
+  };
 
   const smoothScroll = (targetId) => {
-    const element = document.getElementById(targetId)
+    const element = document.getElementById(targetId);
     if (element) {
-      const startPosition = window.pageYOffset
-      const targetPosition = element.getBoundingClientRect().top + window.pageYOffset - 80
-      const distance = targetPosition - startPosition
-      const duration = 1200 // 1.2 seconds for smooth scrolling
-      let start = null
+      const startPosition = window.pageYOffset;
+      const targetPosition =
+        element.getBoundingClientRect().top + window.pageYOffset - 80;
+      const distance = targetPosition - startPosition;
+      const duration = 1200; // 1.2 seconds for smooth scrolling
+      let start = null;
 
       const animation = (currentTime) => {
-        if (start === null) start = currentTime
-        const timeElapsed = currentTime - start
-        const run = ease(timeElapsed, startPosition, distance, duration)
-        window.scrollTo(0, run)
-        if (timeElapsed < duration) requestAnimationFrame(animation)
-      }
+        if (start === null) start = currentTime;
+        const timeElapsed = currentTime - start;
+        const run = ease(timeElapsed, startPosition, distance, duration);
+        window.scrollTo(0, run);
+        if (timeElapsed < duration) requestAnimationFrame(animation);
+      };
 
       const ease = (t, b, c, d) => {
-        t /= d / 2
-        if (t < 1) return c / 2 * t * t * t + b
-        t -= 2
-        return c / 2 * (t * t * t + 2) + b
-      }
+        t /= d / 2;
+        if (t < 1) return (c / 2) * t * t * t + b;
+        t -= 2;
+        return (c / 2) * (t * t * t + 2) + b;
+      };
 
-      requestAnimationFrame(animation)
+      requestAnimationFrame(animation);
     }
-  }
+  };
 
-  const openDeveloperModal = () => setIsDeveloperModalOpen(true)
-  const closeDeveloperModal = () => setIsDeveloperModalOpen(false)
+  const openDeveloperModal = () => setIsDeveloperModalOpen(true);
+  const closeDeveloperModal = () => setIsDeveloperModalOpen(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 scroll-smooth hide-scrollbar" style={{ scrollBehavior: 'smooth' }}>
+    <div
+      className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 scroll-smooth hide-scrollbar"
+      style={{ scrollBehavior: "smooth" }}
+    >
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md shadow-sm fixed top-0 left-0 right-0 z-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -146,7 +165,7 @@ const LandingPage = () => {
             {/* Logo */}
             <div className="flex items-center space-x-3">
               <div className="relative">
-               <Client_Logo size={window.innerWidth < 640 ? 40 : 45} />
+                <Client_Logo size={window.innerWidth < 640 ? 40 : 45} />
                 <div className="absolute rounded-full "></div>
               </div>
               <span className="text-xl font-bold text-gray-800">NUVELCO</span>
@@ -154,45 +173,62 @@ const LandingPage = () => {
 
             {/* Navigation - Mobile Menu Button */}
             <div className="lg:hidden" ref={mobileMenuButtonRef}>
-              <button 
+              <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="p-2 rounded-lg text-gray-600 hover:text-[#188b3e] hover:bg-gray-100 transition-colors"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isMobileMenuOpen ? 2 : 1.5} d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={isMobileMenuOpen ? 2 : 1.5}
+                    d={
+                      isMobileMenuOpen
+                        ? "M6 18L18 6M6 6l12 12"
+                        : "M4 6h16M4 12h16M4 18h16"
+                    }
+                  />
                 </svg>
               </button>
             </div>
 
             {/* Mobile Menu */}
             {isMobileMenuOpen && (
-              <div ref={mobileMenuRef} className="fixed top-16 right-4 z-60 lg:hidden">
+              <div
+                ref={mobileMenuRef}
+                className="fixed top-16 right-4 z-60 lg:hidden"
+              >
                 <div className="bg-white shadow-2xl border-2 border-gray-300 w-80 sm:w-96 rounded-2xl transform transition-transform duration-300 ease-in-out">
                   <nav className="flex flex-col">
                     <div className="p-6 bg-white rounded-t-2xl">
                       <div className="space-y-2">
-                        <button 
+                        <button
                           onClick={() => {
-                            smoothScroll('features')
-                            setIsMobileMenuOpen(false)
+                            smoothScroll("features");
+                            setIsMobileMenuOpen(false);
                           }}
                           className="w-full text-left px-4 py-4 text-lg text-gray-700 hover:bg-gray-50 hover:text-[#188b3e] transition-colors rounded-lg font-medium"
                         >
                           Features
                         </button>
-                        <button 
+                        <button
                           onClick={() => {
-                            smoothScroll('about')
-                            setIsMobileMenuOpen(false)
+                            smoothScroll("about");
+                            setIsMobileMenuOpen(false);
                           }}
                           className="w-full text-left px-4 py-4 text-lg text-gray-700 hover:bg-gray-50 hover:text-[#188b3e] transition-colors rounded-lg font-medium"
                         >
                           About
                         </button>
-                        <button 
+                        <button
                           onClick={() => {
-                            openDeveloperModal()
-                            setIsMobileMenuOpen(false)
+                            openDeveloperModal();
+                            setIsMobileMenuOpen(false);
                           }}
                           className="w-full text-left px-4 py-4 text-lg text-gray-700 hover:bg-gray-50 hover:text-[#188b3e] transition-colors rounded-lg font-medium"
                         >
@@ -204,8 +240,8 @@ const LandingPage = () => {
                       <Button
                         label="Login"
                         onClick={() => {
-                          openModal()
-                          setIsMobileMenuOpen(false)
+                          openModal();
+                          setIsMobileMenuOpen(false);
                         }}
                         variant="custom"
                         customColor="#188b3e"
@@ -221,21 +257,21 @@ const LandingPage = () => {
 
             {/* Navigation - Desktop */}
             <nav className="hidden lg:flex space-x-8">
-              <button 
-                onClick={() => smoothScroll('features')}
+              <button
+                onClick={() => smoothScroll("features")}
                 className="text-gray-600 hover:text-[#188b3e] transition-colors relative group"
               >
                 Features
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#188b3e] transition-all duration-300 group-hover:w-full"></span>
               </button>
-              <button 
-                onClick={() => smoothScroll('about')}
+              <button
+                onClick={() => smoothScroll("about")}
                 className="text-gray-600 hover:text-[#188b3e] transition-colors relative group"
               >
                 About
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#188b3e] transition-all duration-300 group-hover:w-full"></span>
               </button>
-              <button 
+              <button
                 onClick={openDeveloperModal}
                 className="text-gray-600 hover:text-[#188b3e] transition-colors relative group"
               >
@@ -276,11 +312,13 @@ const LandingPage = () => {
                 <span className="block text-[#188b3e]">Attendance</span>
                 <span className="block">Keeper</span>
               </h1>
-              
+
               <p className="text-xl text-gray-600 leading-relaxed">
-                A smart attendance solution forNueva Vizcaya Electric Cooperative. Simplify interns and visitor tracking with quick QR code scanning and image capture in every entry as proof.
+                A smart attendance solution forNueva Vizcaya Electric
+                Cooperative. Simplify interns and visitor tracking with quick QR
+                code scanning and image capture in every entry as proof.
               </p>
-              
+
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   label="Start Attendance"
@@ -293,7 +331,7 @@ const LandingPage = () => {
                 />
                 <Button
                   label="Learn More"
-                  onClick={() => smoothScroll('features')}
+                  onClick={() => smoothScroll("features")}
                   variant="secondary"
                   size="lg"
                   className="border-2 border-[#188b3e] text-[#188b3e] hover:bg-[#188b3e] hover:text-white w-full sm:w-auto"
@@ -308,12 +346,20 @@ const LandingPage = () => {
                 <div className="bg-white rounded-2xl shadow-2xl p-8 transform hover:scale-105 transition-transform duration-300">
                   <div className="flex flex-col items-center">
                     <div className="relative mb-6">
-                      <img src="/system_logo.png" alt="NUVELCO" className="h-20 sm:h-24 w-auto" />
+                      <img
+                        src="/system_logo.png"
+                        alt="NUVELCO"
+                        className="h-20 sm:h-24 w-auto"
+                      />
                       <div className="absolute  rounded-full "></div>
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">NUVELCO</h3>
-                    <p className="text-gray-600 text-center">Dupax del Norte National High School</p>
-                    
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                      NUVELCO
+                    </h3>
+                    <p className="text-gray-600 text-center">
+                      Nueva Vizcaya Electric Cooperative
+                    </p>
+
                     {/* Feature Icons */}
                     <div className="flex gap-4 mt-6">
                       <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -342,7 +388,8 @@ const LandingPage = () => {
               QR Attendance Keeper Features
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Essential tools for tracking interns and visitors attendance at DDNHS.
+              Essential tools for tracking interns and visitors attendance at
+              DDNHS.
             </p>
           </div>
 
@@ -352,9 +399,12 @@ const LandingPage = () => {
               <div className="bg-green-100 rounded-full p-4 w-fit mb-4">
                 <FiActivity className="w-6 h-6 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Time-in/Time-out Tracking</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                Time-in/Time-out Tracking
+              </h3>
               <p className="text-gray-600">
-                Accurate interns and visitors attendance tracking with timestamp.
+                Accurate interns and visitors attendance tracking with
+                timestamp.
               </p>
             </div>
 
@@ -363,7 +413,9 @@ const LandingPage = () => {
               <div className="bg-blue-100 rounded-full p-4 w-fit mb-4">
                 <FaQrcode className="w-6 h-6 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">QR Code Attendance</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                QR Code Attendance
+              </h3>
               <p className="text-gray-600">
                 QR code scanning for interns and visitors attendance .
               </p>
@@ -374,7 +426,9 @@ const LandingPage = () => {
               <div className="bg-green-100 rounded-full p-4 w-fit mb-4">
                 <FiCamera className="w-6 h-6 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Photo Capture Attendance</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                Photo Capture Attendance
+              </h3>
               <p className="text-gray-600">
                 Automatic photo capture for every attendance entry.
               </p>
@@ -391,15 +445,16 @@ const LandingPage = () => {
                 About QR Attendance Keeper
               </h2>
               <p className="text-lg text-gray-600 mb-6">
-                <strong>QR Attendance Keeper</strong> is designed to transform  how NUVELCO manages attendance. By leveraging QR code technology, the system eliminates manual record-keeping and provides real-time, accurate tracking for both interns and visitors.
+                <strong>QR Attendance Keeper</strong> is designed to transform
+                how NUVELCO manages attendance. By leveraging QR code
+                technology, the system eliminates manual record-keeping and
+                provides real-time, accurate tracking for both interns and
+                visitors.
               </p>
             </div>
             <div className="flex justify-center">
               <div className="bg-white rounded-2xl  p-8 shadow-lg">
-               
-             <System_Logo size={200}/>
-                
-              
+                <System_Logo size={200} />
               </div>
             </div>
           </div>
@@ -410,7 +465,10 @@ const LandingPage = () => {
       <footer className="bg-gray-900 text-gray-300 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <p>Copyright &copy;  2026 PM.Gumiran Digital Solutions. All Rights Reserved.</p>
+            <p>
+              Copyright &copy; 2026 PM.Gumiran Digital Solutions. All Rights
+              Reserved.
+            </p>
           </div>
         </div>
       </footer>
@@ -434,15 +492,22 @@ const LandingPage = () => {
         </div>
       )}
 
-    {/* Login Modal */}
-    <LoginModal isOpen={isModalOpen} onClose={closeModal} />
-    
-    {/* Attendance Modal */}
-    <AttendanceModal isOpen={isAttendanceModalOpen} onClose={closeAttendanceModal} />
-    
-    {/* Developer Modal */}
-    <DeveloperModal isOpen={isDeveloperModalOpen} onClose={closeDeveloperModal} />
-  </div>
-)}
+      {/* Login Modal */}
+      <LoginModal isOpen={isModalOpen} onClose={closeModal} />
 
-export default LandingPage
+      {/* Attendance Modal */}
+      <AttendanceModal
+        isOpen={isAttendanceModalOpen}
+        onClose={closeAttendanceModal}
+      />
+
+      {/* Developer Modal */}
+      <DeveloperModal
+        isOpen={isDeveloperModalOpen}
+        onClose={closeDeveloperModal}
+      />
+    </div>
+  );
+};
+
+export default LandingPage;
