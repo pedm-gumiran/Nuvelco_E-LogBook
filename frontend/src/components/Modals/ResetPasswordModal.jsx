@@ -1,121 +1,127 @@
-import React, { useState, useEffect } from 'react'
-import Input_Password from '../Input_Fields/Input_Password.jsx'
-import Btn_X from '../Buttons/Btn_X.jsx'
-import Button from '../Buttons/Button.jsx'
-import School_Logo from '../Logo/Client_Logo.jsx'
-import axiosInstance from '../../api/axios.js'
-import { toast } from 'react-toastify'
+import React, { useState, useEffect } from "react";
+import Input_Password from "../Input_Fields/Input_Password.jsx";
+import Btn_X from "../Buttons/Btn_X.jsx";
+import Button from "../Buttons/Button.jsx";
+import School_Logo from "../Logo/Client_Logo.jsx";
+import axiosInstance from "../../api/axios.js";
+import { toast } from "react-toastify";
 
-const ResetPasswordModal = ({ isOpen, onClose, onSwitchToLogin, email }) => {
+const ResetPasswordModal = ({ isOpen, onClose, onSwitchToLogin, username }) => {
   const [formData, setFormData] = useState({
-    newPassword: '',
-    confirmPassword: ''
-  })
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Clear form when modal closes
   useEffect(() => {
     if (!isOpen) {
       setFormData({
-        newPassword: '',
-        confirmPassword: ''
-      })
-      setError('')
-      setSuccess(false)
+        newPassword: "",
+        confirmPassword: "",
+      });
+      setError("");
+      setSuccess(false);
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
-      const scrollY = window.scrollY
-      document.body.style.position = 'fixed'
-      document.body.style.top = `-${scrollY}px`
-      document.body.style.left = '0'
-      document.body.style.right = '0'
-      document.body.style.overflow = 'hidden'
-      document.body.style.width = '100%'
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.overflow = "hidden";
+      document.body.style.width = "100%";
     } else {
-      const scrollY = document.body.style.top
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-      document.body.style.overflow = ''
-      document.body.style.width = ''
-      window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+      document.body.style.width = "";
+      window.scrollTo(0, parseInt(scrollY || "0") * -1);
     }
 
     return () => {
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-      document.body.style.overflow = ''
-      document.body.style.width = ''
-    }
-  }, [isOpen])
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+      document.body.style.width = "";
+    };
+  }, [isOpen]);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
-    })
-    setError('')
-  }
+      [e.target.name]: e.target.value,
+    });
+    setError("");
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setError('')
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
 
     // Validation
     if (formData.newPassword.length < 6) {
-      setError('Password must be at least 6 characters long.')
-      setIsSubmitting(false)
-      return
+      setError("Password must be at least 6 characters long.");
+      setIsSubmitting(false);
+      return;
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setError('Passwords do not match. Please try again.')
-      setIsSubmitting(false)
-      return
+      setError("Passwords do not match. Please try again.");
+      setIsSubmitting(false);
+      return;
     }
 
     try {
-      const response = await axiosInstance.post('/admin/reset-password', {
-        email: email,
-        newPassword: formData.newPassword
-      })
+      const response = await axiosInstance.post("/admin/reset-password", {
+        username: username,
+        newPassword: formData.newPassword,
+      });
 
       if (response.data.success) {
-        toast.success('Password reset successfully!')
-        setSuccess(true)
-        
+        toast.success("Password reset successfully!");
+        setSuccess(true);
+
         // Auto redirect to login after 2 seconds
         setTimeout(() => {
-          onSwitchToLogin()
-        }, 2000)
+          onSwitchToLogin();
+        }, 2000);
       } else {
-        setError(response.data.message || 'Failed to reset password')
+        setError(response.data.message || "Failed to reset password");
       }
     } catch (error) {
-      console.error('Password reset error:', error)
-      setError(error.response?.data?.message || 'Failed to reset password. Please try again.')
+      console.error("Password reset error:", error);
+      setError(
+        error.response?.data?.message ||
+          "Failed to reset password. Please try again.",
+      );
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[320px] sm:max-w-[340px] relative flex flex-col items-center p-3 sm:p-4 animate-in zoom-in-95 duration-300">
         {/* Close Button */}
         <div className="absolute top-4 right-4 z-10">
-          <Btn_X onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600" />
+          <Btn_X
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600"
+          />
         </div>
 
         {/* Logo and Header Section */}
@@ -130,17 +136,24 @@ const ResetPasswordModal = ({ isOpen, onClose, onSwitchToLogin, email }) => {
         {success ? (
           <div className="w-full text-center py-4">
             <div className="bg-green-100 border border-green-300 rounded-lg p-3 mb-3">
-              <p className="text-green-800 text-sm font-bold">Password Reset Successful!</p>
-              <p className="text-green-700 text-xs mt-1">Your password has been updated.</p>
+              <p className="text-green-800 text-sm font-bold">
+                Password Reset Successful!
+              </p>
+              <p className="text-green-700 text-xs mt-1">
+                Your password has been updated.
+              </p>
             </div>
             <p className="text-gray-500 text-xs">Redirecting to login...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="w-full space-y-2 text-left">
-            <h2 className="text-gray-800 text-sm font-bold uppercase tracking-tight text-center mb-2">Reset Password</h2>
-            
+            <h2 className="text-gray-800 text-sm font-bold uppercase tracking-tight text-center mb-2">
+              Reset Password
+            </h2>
+
             <p className="text-gray-500 text-[10px] text-center mb-2">
-              Create a new password for <span className="font-semibold">{email}</span>
+              Create a new password for{" "}
+              <span className="font-semibold">{username}</span>
             </p>
 
             <Input_Password
@@ -195,7 +208,7 @@ const ResetPasswordModal = ({ isOpen, onClose, onSwitchToLogin, email }) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ResetPasswordModal
+export default ResetPasswordModal;

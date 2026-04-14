@@ -18,11 +18,11 @@ const LoginModal = ({ isOpen, onClose }) => {
   const [showRegister, setShowRegister] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
+  const [resetUsername, setResetUsername] = useState("");
   const [adminExists, setAdminExists] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +31,7 @@ const LoginModal = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (!isOpen || showRegister || showForgotPassword || showResetPassword) {
       setFormData({
-        email: "",
+        username: "",
         password: "",
       });
     }
@@ -41,7 +41,7 @@ const LoginModal = ({ isOpen, onClose }) => {
   useEffect(() => {
     return () => {
       setFormData({
-        email: "",
+        username: "",
         password: "",
       });
     };
@@ -89,8 +89,8 @@ const LoginModal = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  const handleVerified = (email) => {
-    setResetEmail(email);
+  const handleVerified = (username) => {
+    setResetUsername(username);
     setShowForgotPassword(false);
     setShowResetPassword(true);
   };
@@ -147,9 +147,9 @@ const LoginModal = ({ isOpen, onClose }) => {
     setIsLoading(true);
 
     try {
-      // Call login API with email and password
+      // Call login API with username and password
       const response = await axiosInstance.post("/admin/login", {
-        email: formData.email,
+        username: formData.username,
         password: formData.password,
       });
 
@@ -216,12 +216,12 @@ const LoginModal = ({ isOpen, onClose }) => {
               className="w-full space-y-1.5 text-left"
             >
               <Input_Text
-                label="Email"
-                name="email"
-                type="email"
-                value={formData.email}
+                label="Username"
+                name="username"
+                type="text"
+                value={formData.username}
                 onChange={handleChange}
-                placeholder="e.g. admin@institution.edu"
+                placeholder="Enter your username"
                 required
               />
 
@@ -301,7 +301,7 @@ const LoginModal = ({ isOpen, onClose }) => {
           setShowResetPassword(false);
           setShowForgotPassword(false);
         }}
-        email={resetEmail}
+        username={resetUsername}
       />
     </>
   );

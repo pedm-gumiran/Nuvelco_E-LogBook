@@ -82,14 +82,14 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
     try {
       setLoading(true);
 
-      if (!user || !user.email) {
+      if (!user || !user.username) {
         toast.error("User not found. Please login again.");
         onClose();
         return;
       }
 
       const response = await axiosInstance.post("/admin/reset-password", {
-        email: user.email,
+        username: user.username,
         newPassword: formData.newPassword,
       });
 

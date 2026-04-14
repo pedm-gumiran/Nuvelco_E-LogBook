@@ -25,7 +25,7 @@ export default function Input_Text({
   const formatValue = (inputValue) => {
     if (type === "email") {
       return inputValue; // keep as-is for email
-    } else if (name === "rrfNumber") {
+    } else if (name === "rrfNumbeR") {
       return inputValue.toUpperCase(); // ALL CAPS for RRF number
     } else if (name === "Unit" || name === "Item_Description") {
       return inputValue; // keep as-is for Unit and Item_Description fields (no auto-capitalization)
@@ -69,10 +69,10 @@ export default function Input_Text({
         autoComplete={
           type === "email" || name === "email"
             ? "email"
-            : name === "pin_code"
+            : name === "pinCode" || name === "username"
               ? "off"
               : "new-password"
-        } // Enable auto-suggestion for email, disable for PIN code
+        } // Enable auto-suggestion for email, disable for PIN code and username
       />
       {value && !disabled && type !== "number" && (
         <span

@@ -1,101 +1,109 @@
-import React, { useState, useEffect } from 'react'
-import Input_Text from '../Input_Fields/Input_Text.jsx'
-import Btn_X from '../Buttons/Btn_X.jsx'
-import Button from '../Buttons/Button.jsx'
-import School_Logo from '../Logo/Client_Logo.jsx'
-import axiosInstance from '../../api/axios.js'
-import { toast } from 'react-toastify'
+import React, { useState, useEffect } from "react";
+import Input_Text from "../Input_Fields/Input_Text.jsx";
+import Btn_X from "../Buttons/Btn_X.jsx";
+import Button from "../Buttons/Button.jsx";
+import School_Logo from "../Logo/Client_Logo.jsx";
+import axiosInstance from "../../api/axios.js";
+import { toast } from "react-toastify";
 
-const ForgotPasswordModal = ({ isOpen, onClose, onSwitchToLogin, onVerified }) => {
+const ForgotPasswordModal = ({
+  isOpen,
+  onClose,
+  onSwitchToLogin,
+  onVerified,
+}) => {
   const [formData, setFormData] = useState({
-    email: '',
-    pinCode: ''
-  })
-  const [error, setError] = useState('')
-  const [isVerifying, setIsVerifying] = useState(false)
+    username: "",
+    pinCode: "",
+  });
+  const [error, setError] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
 
   // Clear form when modal closes
   useEffect(() => {
     if (!isOpen) {
       setFormData({
-        email: '',
-        pinCode: ''
-      })
-      setError('')
+        username: "",
+        pinCode: "",
+      });
+      setError("");
     }
-  }, [isOpen])
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
-      const scrollY = window.scrollY
-      document.body.style.position = 'fixed'
-      document.body.style.top = `-${scrollY}px`
-      document.body.style.left = '0'
-      document.body.style.right = '0'
-      document.body.style.overflow = 'hidden'
-      document.body.style.width = '100%'
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.overflow = "hidden";
+      document.body.style.width = "100%";
     } else {
-      const scrollY = document.body.style.top
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-      document.body.style.overflow = ''
-      document.body.style.width = ''
-      window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+      document.body.style.width = "";
+      window.scrollTo(0, parseInt(scrollY || "0") * -1);
     }
 
     return () => {
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-      document.body.style.overflow = ''
-      document.body.style.width = ''
-    }
-  }, [isOpen])
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.overflow = "";
+      document.body.style.width = "";
+    };
+  }, [isOpen]);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
-    })
-    setError('')
-  }
+      [e.target.name]: e.target.value,
+    });
+    setError("");
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsVerifying(true)
-    setError('')
+    e.preventDefault();
+    setIsVerifying(true);
+    setError("");
 
     try {
-      const response = await axiosInstance.post('/admin/verify-identity', {
-        email: formData.email,
-        pin_code: formData.pinCode
-      })
+      const response = await axiosInstance.post("/admin/verify-identity", {
+        username: formData.username,
+        pin_code: formData.pinCode,
+      });
 
       if (response.data.success) {
-        toast.success('Identity verified successfully!')
-        onVerified(formData.email)
+        toast.success("Identity verified successfully!");
+        onVerified(formData.username);
       } else {
-        setError('Invalid credentials. Please try again.')
+        setError("Invalid credentials. Please try again.");
       }
     } catch (error) {
-      console.error('Verification error:', error)
-      setError('Verification failed. Please try again.')
+      console.error("Verification error:", error);
+      setError("Verification failed. Please try again.");
     } finally {
-      setIsVerifying(false)
+      setIsVerifying(false);
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[320px] sm:max-w-[340px] relative flex flex-col items-center p-3 sm:p-4 animate-in zoom-in-95 duration-300">
         {/* Close Button */}
         <div className="absolute top-4 right-4 z-10">
-          <Btn_X onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600" />
+          <Btn_X
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600"
+          />
         </div>
 
         {/* Logo and Header Section */}
@@ -108,19 +116,21 @@ const ForgotPasswordModal = ({ isOpen, onClose, onSwitchToLogin, onVerified }) =
         </div>
 
         <form onSubmit={handleSubmit} className="w-full space-y-2 text-left">
-          <h2 className="text-gray-800 text-sm font-bold uppercase tracking-tight text-center mb-2">Forgot Password</h2>
-          
+          <h2 className="text-gray-800 text-sm font-bold uppercase tracking-tight text-center mb-2">
+            Forgot Password
+          </h2>
+
           <p className="text-gray-500 text-[10px] text-center mb-2">
-            Enter your email and PIN code to verify your identity.
+            Enter your username and PIN code to verify your identity.
           </p>
 
           <Input_Text
-            label="Email"
-            name="email"
-            type="email"
-            value={formData.email}
+            label="Username"
+            name="username"
+            type="text"
+            value={formData.username}
             onChange={handleChange}
-            placeholder="Enter your email"
+            placeholder="Enter your username"
             required
           />
 
@@ -155,7 +165,7 @@ const ForgotPasswordModal = ({ isOpen, onClose, onSwitchToLogin, onVerified }) =
 
           <div className="text-center pt-1">
             <p className="text-gray-500 text-[10px]">
-              Remember your password?{' '}
+              Remember your password?{" "}
               <button
                 type="button"
                 onClick={onSwitchToLogin}
@@ -168,7 +178,7 @@ const ForgotPasswordModal = ({ isOpen, onClose, onSwitchToLogin, onVerified }) =
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ForgotPasswordModal
+export default ForgotPasswordModal;
