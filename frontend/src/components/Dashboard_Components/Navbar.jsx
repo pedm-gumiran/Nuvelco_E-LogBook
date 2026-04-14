@@ -75,7 +75,7 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
             newNotifications.push({
               id,
               title: "New Intern Registered",
-              message: `${intern.first_name} ${intern.last_name} has been registered successfully.`,
+              message: `${intern.first_name} ${intern.last_name} ${intern.suffix || ""} has been registered successfully.`,
               time: createdAt,
               read: readStatus[id] || false,
               type: "intern",

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FiDownload, FiCalendar } from "react-icons/fi";
+import { FiDownload, FiCalendar, FiZoomIn, FiZoomOut, FiMaximize, FiMinimize, FiMaximize2 } from "react-icons/fi";
 import Btn_X from "../Buttons/Btn_X.jsx";
 import Button from "../Buttons/Button.jsx";
 
@@ -26,6 +26,15 @@ const PreviewDtrModal = ({
     const now = new Date();
     return now.getFullYear();
   });
+
+  const [zoomScale, setZoomScale] = useState(80);
+  const [isFullScreen, setIsFullScreen] = useState(true);
+
+  const handleZoom = (type) => {
+    if (type === "in") setZoomScale((prev) => Math.min(prev + 10, 150));
+    else if (type === "out") setZoomScale((prev) => Math.max(prev - 10, 20));
+    else setZoomScale(80);
+  };
 
   // Parse date as local time
   const parseLocalDate = (dateStr) => {
@@ -268,14 +277,21 @@ const PreviewDtrModal = ({
             window.onload = function() {
               setTimeout(function() {
                 window.print();
-                window.onafterprint = function() { window.close(); };
-              }, 300);
+                // Close after a small delay to ensure the print process is handled
+                setTimeout(function() { window.close(); }, 500);
+              }, 500);
+              // Fallback for some browsers
+              window.onafterprint = function() { window.close(); };
             };
           </script>
         </body>
       </html>
     `);
     printWindow.document.close();
+
+    // Auto-close the modal after triggering print
+    onClose();
+    if (onCloseParent) onCloseParent();
   };
 
   // Disable body scroll when modal is open
@@ -337,35 +353,35 @@ const PreviewDtrModal = ({
 
   // Render DTR Table Column
   const renderDtrTable = (rows, startDay, isLastTable = false) => (
-    <table className="w-full text-[20px] border-collapse">
+    <table className="w-full text-[12px] border-collapse table-fixed">
       <thead>
-        <tr className="bg-gray-100">
+        <tr className="bg-gray-100 text-[11px]">
           <th
-            className="border border-black px-1 py-0.5 text-center font-bold w-6"
+            className="border border-black px-0 py-0.5 text-center font-bold font-sans w-6"
             rowSpan="2"
           >
             Day
           </th>
           <th
-            className="border border-black px-1 py-0.5 text-center font-bold"
+            className="border border-black px-0 py-0.5 text-center font-bold font-sans"
             colSpan="2"
           >
             MORNING
           </th>
           <th
-            className="border border-black px-1 py-0.5 text-center font-bold"
+            className="border border-black px-0 py-0.5 text-center font-bold font-sans"
             colSpan="2"
           >
             AFTERNOON
           </th>
           <th
-            className="border border-black px-1 py-0.5 text-center font-bold"
+            className="border border-black px-0 py-0.5 text-center font-bold font-sans"
             colSpan="2"
           >
             OVERTIME
           </th>
           <th
-            className="border border-black px-1 py-0.5 text-center font-bold w-10"
+            className="border border-black px-0 py-0.5 text-center font-bold font-sans w-10 leading-tight"
             rowSpan="2"
           >
             Daily
@@ -373,23 +389,23 @@ const PreviewDtrModal = ({
             Total
           </th>
         </tr>
-        <tr className="bg-gray-100">
-          <th className="border border-black px-1 py-0.5 text-center font-bold w-12">
+        <tr className="bg-gray-100 text-[10px]">
+          <th className="border border-black px-0 py-0.5 text-center font-bold">
             IN
           </th>
-          <th className="border border-black px-1 py-0.5 text-center font-bold w-12">
+          <th className="border border-black px-0 py-0.5 text-center font-bold">
             OUT
           </th>
-          <th className="border border-black px-1 py-0.5 text-center font-bold w-12">
+          <th className="border border-black px-0 py-0.5 text-center font-bold">
             IN
           </th>
-          <th className="border border-black px-1 py-0.5 text-center font-bold w-12">
+          <th className="border border-black px-0 py-0.5 text-center font-bold">
             OUT
           </th>
-          <th className="border border-black px-1 py-0.5 text-center font-bold w-12">
+          <th className="border border-black px-0 py-0.5 text-center font-bold">
             IN
           </th>
-          <th className="border border-black px-1 py-0.5 text-center font-bold w-12">
+          <th className="border border-black px-0 py-0.5 text-center font-bold">
             OUT
           </th>
         </tr>
@@ -399,28 +415,28 @@ const PreviewDtrModal = ({
           const day = startDay + index;
           return (
             <tr key={day} className="h-6">
-              <td className="border border-black px-1 py-0 text-center font-medium">
+              <td className="border border-black px-0 py-0 text-center font-medium font-sans">
                 {day}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[15px]">
+              <td className="border border-black px-0 py-0 text-center text-[12px] whitespace-nowrap">
                 {row.amIn}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[15px]">
+              <td className="border border-black px-0 py-0 text-center text-[12px] whitespace-nowrap">
                 {row.amOut}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[15px]">
+              <td className="border border-black px-0 py-0 text-center text-[12px] whitespace-nowrap">
                 {row.pmIn}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[15px]">
+              <td className="border border-black px-0 py-0 text-center text-[12px] whitespace-nowrap">
                 {row.pmOut}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[15px]">
+              <td className="border border-black px-0 py-0 text-center text-[12px] whitespace-nowrap">
                 {/* Overtime IN - placeholder */}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[15px]">
+              <td className="border border-black px-0 py-0 text-center text-[12px] whitespace-nowrap">
                 {/* Overtime OUT - placeholder */}
               </td>
-              <td className="border border-black px-1 py-0 text-center text-[15px] font-medium">
+              <td className="border border-black px-0 py-0 text-center text-[12px] font-medium">
                 {row.hours}
               </td>
             </tr>
@@ -431,11 +447,11 @@ const PreviewDtrModal = ({
           <tr className="h-6">
             <td
               colSpan="7"
-              className="border border-black px-2 py-0 text-right font-bold text-[15px]"
+              className="border border-black px-2 py-0 text-right font-bold text-[12px]"
             >
               GRAND TOTAL HOURS
             </td>
-            <td className="border border-black px-1 py-0 text-center text-[15px] font-bold">
+            <td className="border border-black px-0 py-0 text-center text-[12px] font-bold">
               {calculateTotalSum([...leftRows, ...rightRows])}
             </td>
           </tr>
@@ -445,17 +461,17 @@ const PreviewDtrModal = ({
         {!isLastTable && (
           <>
             <tr className="h-6">
-              <td className="border border-black px-1 py-0">&nbsp;</td>
-              <td className="border border-black px-1 py-0">&nbsp;</td>
-              <td className="border border-black px-1 py-0">&nbsp;</td>
-              <td className="border border-black px-1 py-0">&nbsp;</td>
-              <td className="border border-black px-1 py-0">&nbsp;</td>
-              <td className="border border-black px-1 py-0">&nbsp;</td>
-              <td className="border border-black px-1 py-0">&nbsp;</td>
-              <td className="border border-black px-1 py-0">&nbsp;</td>
+              <td className="border border-black px-0 py-0">&nbsp;</td>
+              <td className="border border-black px-0 py-0">&nbsp;</td>
+              <td className="border border-black px-0 py-0">&nbsp;</td>
+              <td className="border border-black px-0 py-0">&nbsp;</td>
+              <td className="border border-black px-0 py-0">&nbsp;</td>
+              <td className="border border-black px-0 py-0">&nbsp;</td>
+              <td className="border border-black px-0 py-0">&nbsp;</td>
+              <td className="border border-black px-0 py-0">&nbsp;</td>
             </tr>
             <tr className="h-6">
-              <td colSpan="8" className="border border-black px-1 py-0">
+              <td colSpan="8" className="border border-black px-0 py-0">
                 &nbsp;
               </td>
             </tr>
@@ -542,76 +558,130 @@ const PreviewDtrModal = ({
           }
         }
       `}</style>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div className="bg-white rounded-t-3xl rounded-b-lg max-w-6xl w-full max-h-[95vh] flex flex-col overflow-hidden">
+      <div className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-all duration-300 ${isFullScreen ? "p-0" : "p-4"}`}>
+        <div 
+          className={`bg-white shadow-2xl flex flex-col overflow-hidden transition-all duration-500 ease-in-out ${
+            isFullScreen ? "w-full h-full rounded-none" : "w-full max-w-6xl max-h-[95vh] rounded-t-3xl rounded-b-lg"
+          }`}
+        >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 bg-[#168e3f] shrink-0 rounded-t-3xl print:hidden">
+          <div className={`flex items-center justify-between px-6 py-4 bg-[#168e3f] shrink-0 print:hidden ${isFullScreen ? "rounded-none" : "rounded-t-3xl"}`}>
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-semibold text-white">
                 DTR Preview - {selectedRecord.name}
               </h3>
             </div>
-            <Btn_X
-              onClick={() => {
-                onClose();
-                if (onCloseParent) onCloseParent();
-              }}
-              className="p-2 hover:bg-white/20 rounded-full transition-colors text-white/80 hover:text-white"
-            />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsFullScreen(!isFullScreen)}
+                className="p-2 hover:bg-white/20 rounded-full transition-colors text-white/80 hover:text-white"
+                title={isFullScreen ? "Small Screen" : "Full Screen"}
+              >
+                {isFullScreen ? (
+                  <FiMinimize size={22} />
+                ) : (
+                  <FiMaximize2 size={22} />
+                )}
+              </button>
+              <Btn_X
+                onClick={() => {
+                  onClose();
+                  if (onCloseParent) onCloseParent();
+                }}
+                className="p-2 hover:bg-white/20 rounded-full transition-colors text-white/80 hover:text-white"
+              />
+            </div>
           </div>
 
           {/* Content */}
-          <div className="p-4 overflow-y-auto flex-1 bg-gray-50">
-            {/* Month/Year Selector */}
-            <div className="bg-white rounded-lg p-3 mb-4 print:hidden">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <FiCalendar className="w-5 h-5 text-[#188b3e]" />
-                  <select
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                    className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#188b3e] text-sm"
-                  >
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <option key={i} value={i}>
-                        {new Date(2024, i).toLocaleDateString("en-US", {
-                          month: "long",
-                        })}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#188b3e] text-sm"
-                  >
-                    {Array.from({ length: 5 }, (_, i) => {
-                      const year = new Date().getFullYear() - 2 + i;
-                      return (
-                        <option key={year} value={year}>
-                          {year}
+          <div className="p-4 overflow-y-auto flex-1 bg-gray-50 relative">
+            {/* Sticky Action Bar */}
+            <div className="sticky top-0 z-40 flex justify-between items-start mb-4 print:hidden pointer-events-none">
+              {/* Month/Year Selector (Left) */}
+              <div className="bg-white/90 backdrop-blur rounded-lg p-3 w-max shadow-md border border-white pointer-events-auto">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <FiCalendar className="w-5 h-5 text-[#188b3e]" />
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                      className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#188b3e] text-sm bg-white"
+                    >
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <option key={i} value={i}>
+                          {new Date(2024, i).toLocaleDateString("en-US", {
+                            month: "long",
+                          })}
                         </option>
-                      );
-                    })}
-                  </select>
+                      ))}
+                    </select>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                      className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#188b3e] text-sm bg-white"
+                    >
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() - 2 + i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900">
+                    {monthName}
+                  </h4>
                 </div>
-                <h4 className="text-lg font-semibold text-gray-900">
-                  {monthName}
-                </h4>
+              </div>
+
+              {/* Zoom Controls (Right) */}
+              <div className="flex items-center gap-2 bg-white/90 backdrop-blur shadow-md rounded-full px-4 py-2 border border-white pointer-events-auto">
+                <button
+                  onClick={() => handleZoom("out")}
+                  className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
+                  title="Zoom Out"
+                >
+                  <FiZoomOut size={20} />
+                </button>
+                <span className="text-sm font-bold text-gray-700 w-12 text-center">
+                  {zoomScale}%
+                </span>
+                <button
+                  onClick={() => handleZoom("in")}
+                  className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
+                  title="Zoom In"
+                >
+                  <FiZoomIn size={20} />
+                </button>
+                <div className="w-px h-4 bg-gray-300 mx-1"></div>
+                <button
+                  onClick={() => handleZoom("reset")}
+                  className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
+                  title="Reset Zoom"
+                >
+                  <FiMaximize size={18} />
+                </button>
               </div>
             </div>
 
             {/* DTR Form */}
-            <div
-              id="dtr-paper"
-              className="bg-white rounded-lg p-4 print-container"
-              style={{
-                position: "relative",
-                minHeight: "1122px",
-                paddingBottom: "80px",
-              }}
-            >
-              {/* Nuvelco Paper Header */}
+            <div className="flex justify-center transition-transform duration-200 mt-8 mb-8 relative z-0">
+              <div
+                id="dtr-paper"
+                className="bg-white rounded-lg p-4 print-container shadow-xl mx-auto"
+                style={{
+                  position: "relative",
+                  width: "210mm",
+                  minHeight: "1122px",
+                  paddingBottom: "80px",
+                  transform: `scale(${zoomScale / 100})`,
+                  transformOrigin: "top center",
+                  marginBottom: `-${1122 * (1 - zoomScale / 100)}px`,
+                }}
+              >
+                {/* Nuvelco Paper Header */}
               <div
                 style={{
                   display: "flex",
@@ -648,8 +718,8 @@ const PreviewDtrModal = ({
                     src="/Nuvelco_title.png"
                     alt="Nuvelco Title"
                     style={{
-                      height: "80px",
-                      width: "100%",
+                      height: "95%",
+                      width: "95%",
                       objectFit: "contain",
                       objectPosition: "left center",
                     }}
@@ -880,7 +950,6 @@ const PreviewDtrModal = ({
                       display: "flex",
                       alignItems: "center",
                       gap: "8px",
-                      fontSize: "11px",
                       color: "#333",
                     }}
                   >
@@ -899,6 +968,7 @@ const PreviewDtrModal = ({
                 </div>
               </div>
             </div>
+          </div>
           </div>
 
           {/* Footer */}

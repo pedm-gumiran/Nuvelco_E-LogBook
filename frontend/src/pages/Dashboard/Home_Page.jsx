@@ -288,6 +288,7 @@ export default function Home_Page() {
     timeIn: to12HourFormat(record.time_in) || "--",
     purpose: record.purpose || "--",
     address: record.address || "--",
+    companyName: record.company_name || "--",
   }));
 
   const filteredInternData = mappedInternData.filter((record) => {
@@ -542,14 +543,25 @@ export default function Home_Page() {
   };
 
   const getSchoolsWithAttendance = () => {
-    const schoolsWithData = [
+    // Get unique school names from attendance records (preserved even if school is deleted)
+    const uniqueSchoolNames = [
       ...new Set(
         internAttendance.map((record) => record.school_name).filter(Boolean),
       ),
     ];
-    return schoolsList.filter((school) =>
-      schoolsWithData.includes(school.school_name),
-    );
+
+    // Create school objects from attendance data
+    // This preserves attendance visibility even after school deletion
+    return uniqueSchoolNames.map((schoolName) => {
+      // Try to find matching school in schoolsList for additional data
+      const schoolInfo = schoolsList.find((s) => s.school_name === schoolName);
+      return {
+        id: schoolInfo?.id || null,
+        school_name: schoolName,
+        created_at: schoolInfo?.created_at || null,
+        updated_at: schoolInfo?.updated_at || null,
+      };
+    });
   };
 
   const getCoursesForSchool = () => {
@@ -564,9 +576,22 @@ export default function Home_Page() {
           .filter(Boolean),
       ),
     ];
-    return coursesList.filter((course) =>
-      coursesWithData.includes(course.course_name),
-    );
+
+    // Create course objects from attendance data
+    // This preserves attendance visibility even after course deletion
+    return coursesWithData.map((courseName) => {
+      // Try to find matching course in coursesList for additional data
+      const courseInfo = coursesList.find((c) => c.course_name === courseName);
+      return {
+        id: courseInfo?.id || null,
+        course_name: courseName,
+        abbreviation: courseInfo?.abbreviation || null,
+        school_id: courseInfo?.school_id || null,
+        created_at: courseInfo?.created_at || null,
+        updated_at: courseInfo?.updated_at || null,
+        intern_count: courseInfo?.intern_count || 0,
+      };
+    });
   };
 
   const getInternsForCourse = () => {
@@ -733,6 +758,7 @@ export default function Home_Page() {
     { key: "timeIn", label: "Time In" },
     { key: "purpose", label: "Purpose" },
     { key: "address", label: "Address" },
+    { key: "companyName", label: "Company Name" },
   ];
 
   const columns = activeTab === "intern" ? internColumns : visitorColumns;

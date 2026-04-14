@@ -150,7 +150,7 @@ const Notification = ({
     }
   }, [isOpen]);
 
-  // Format time to 12-hour with AM/PM (no seconds)
+  // Format time to 12-hour with AM/PM and date
   const formatTime = (time) => {
     const date = new Date(time);
     if (isNaN(date.getTime())) return "Unknown time";
@@ -162,7 +162,25 @@ const Notification = ({
     hours = hours % 12;
     hours = hours ? hours : 12; // 0 should be 12
 
-    return `${hours}:${minutes} ${ampm}`;
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+    const month = monthNames[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+
+    return `${hours}:${minutes} ${ampm} this ${month} ${day}, ${year}`;
   };
 
   return (

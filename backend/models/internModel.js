@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 /* READ ALL */
 exports.getAllInterns = async () => {
-  const [rows] = await db.execute('SELECT id, first_name, middle_initial, last_name, suffix, school_id, course_id FROM intern');
+  const [rows] = await db.execute('SELECT id, first_name, middle_initial, last_name, suffix, school_id, course_id, created_at, updated_at FROM intern');
   return rows;
 };
 
@@ -33,7 +33,7 @@ exports.checkDuplicateByNameExcludingId = async (firstName, lastName, excludeId)
 /* CREATE */
 exports.createIntern = async (id, firstName, middleInitial, lastName, suffix, schoolId, courseId) => {
   const [result] = await db.execute(
-    'INSERT INTO intern (id, first_name, middle_initial, last_name, suffix, school_id, course_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO intern (id, first_name, middle_initial, last_name, suffix, school_id, course_id, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, NULL)',
     [id, firstName, middleInitial, lastName, suffix, schoolId, courseId],
   );
   return result.affectedRows;
@@ -42,7 +42,7 @@ exports.createIntern = async (id, firstName, middleInitial, lastName, suffix, sc
 /* UPDATE / EDIT */
 exports.updateIntern = async (id, firstName, middleInitial, lastName, suffix, schoolId, courseId) => {
   const [result] = await db.execute(
-    'UPDATE intern SET first_name = ?, middle_initial = ?, last_name = ?, suffix = ?, school_id = ?, course_id = ? WHERE id = ?',
+    'UPDATE intern SET first_name = ?, middle_initial = ?, last_name = ?, suffix = ?, school_id = ?, course_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
     [firstName, middleInitial, lastName, suffix, schoolId, courseId, id],
   );
   return result.affectedRows;

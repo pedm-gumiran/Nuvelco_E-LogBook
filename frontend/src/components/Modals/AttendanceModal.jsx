@@ -31,6 +31,7 @@ const AttendanceModal = ({ isOpen, onClose }) => {
     visitor_name: "",
     purpose: "",
     address: "",
+    company_name: "",
   });
 
   // Manual intern search modal state
@@ -67,16 +68,43 @@ const AttendanceModal = ({ isOpen, onClose }) => {
   // Handle intern selection from manual search modal
   const handleManualInternSelect = async (intern) => {
     setLoading(true);
+    const personName = `${intern.first_name} ${intern.last_name}`;
+
     try {
       // Check if intern can record attendance
       const checkResult = await checkInternAttendanceStatus(intern.id);
       if (checkResult && !checkResult.canRecord) {
-        toast.error(checkResult.message || "Attendance already completed");
+        // Show the same toast card overlay as QR scan for completed attendance
+        setScannedData({
+          originalData: intern.id,
+          message: `Attendance is already completed for ${personName}`,
+          isValid: false,
+          personType: "completed",
+          personName: personName,
+        });
+
+        // Cancel any previous speech before starting new one
+        cancelPreviousSpeech();
+
+        // Speak the message
+        speechTimeoutRef.current = setTimeout(() => {
+          speak("Attendance Already completed", {
+            rate: 0.8,
+            pitch: 1,
+            volume: 5,
+          });
+        }, 500);
+
+        // Clear after 5 seconds
+        setTimeout(() => {
+          setScannedData("");
+        }, 5000);
+
+        setShowManualSearchModal(false);
         return;
       }
 
       // Show camera capture modal for manual entry
-      const personName = `${intern.first_name} ${intern.last_name}`;
       setPendingIntern({
         id: intern.id,
         name: personName,
@@ -91,7 +119,34 @@ const AttendanceModal = ({ isOpen, onClose }) => {
       setShowManualSearchModal(false);
     } catch (error) {
       console.error("Manual attendance error:", error);
-      toast.error(error.message || "Failed to process attendance");
+
+      // Show error toast card overlay
+      setScannedData({
+        originalData: intern.id,
+        message: error.message || "Failed to process attendance",
+        isValid: false,
+        personType: "error",
+        personName: personName,
+      });
+
+      // Cancel any previous speech before starting new one
+      cancelPreviousSpeech();
+
+      // Speak the message
+      speechTimeoutRef.current = setTimeout(() => {
+        speak("Attendance Unsuccessful", {
+          rate: 0.8,
+          pitch: 1,
+          volume: 5,
+        });
+      }, 500);
+
+      // Clear after 5 seconds
+      setTimeout(() => {
+        setScannedData("");
+      }, 5000);
+
+      setShowManualSearchModal(false);
     } finally {
       setLoading(false);
     }
@@ -528,12 +583,18 @@ const AttendanceModal = ({ isOpen, onClose }) => {
         time_in: timeIn,
         purpose: visitorForm.purpose,
         address: visitorForm.address,
+        company_name: visitorForm.company_name,
         date: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
       });
 
       if (response.data.success) {
         // Reset form
-        setVisitorForm({ visitor_name: "", purpose: "", address: "" });
+        setVisitorForm({
+          visitor_name: "",
+          purpose: "",
+          address: "",
+          company_name: "",
+        });
         // Refresh data
         fetchAttendanceData();
         // Show success message
@@ -767,6 +828,19 @@ const AttendanceModal = ({ isOpen, onClose }) => {
                       setVisitorForm({
                         ...visitorForm,
                         address: e.target.value,
+                      })
+                    }
+                  />
+                  <Input_Text
+                    label="Company Name"
+                    id="company_name"
+                    name="company_name"
+                    placeholder="Enter company name"
+                    value={visitorForm.company_name}
+                    onChange={(e) =>
+                      setVisitorForm({
+                        ...visitorForm,
+                        company_name: e.target.value,
                       })
                     }
                   />
