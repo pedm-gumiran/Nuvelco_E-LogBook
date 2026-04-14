@@ -15,6 +15,7 @@ import {
   FiAlertCircle,
   FiSearch,
   FiX,
+  FiLoader,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import Btn_X from "../Buttons/Btn_X.jsx";
@@ -36,6 +37,7 @@ const AttendanceModal = ({ isOpen, onClose }) => {
 
   // Manual intern search modal state
   const [showManualSearchModal, setShowManualSearchModal] = useState(false);
+  const [manualSearchKey, setManualSearchKey] = useState(0);
 
   const [attendanceData, setAttendanceData] = useState({
     todayStats: { total: 0, faculty: 0, visitors: 0 },
@@ -214,6 +216,14 @@ const AttendanceModal = ({ isOpen, onClose }) => {
     fetchAttendanceData();
     const interval = setInterval(fetchAttendanceData, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
+  }, []);
+
+  // Update current time every second for ticking clock
+  useEffect(() => {
+    const timeInterval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timeInterval);
   }, []);
 
   useEffect(() => {
@@ -477,6 +487,8 @@ const AttendanceModal = ({ isOpen, onClose }) => {
 
     if (isValid) {
       setTimeout(() => fetchAttendanceData(), 1000);
+      // Reset manual search modal key to clear its data
+      setManualSearchKey((prev) => prev + 1);
     }
   };
 
@@ -588,6 +600,9 @@ const AttendanceModal = ({ isOpen, onClose }) => {
       });
 
       if (response.data.success) {
+        const visitorName =
+          response.data.data?.visitor_name || visitorForm.visitor_name;
+
         // Reset form
         setVisitorForm({
           visitor_name: "",
@@ -597,8 +612,32 @@ const AttendanceModal = ({ isOpen, onClose }) => {
         });
         // Refresh data
         fetchAttendanceData();
-        // Show success message
-        toast.success("Visitor attendance recorded successfully!");
+
+        // Show success card overlay (same style as intern attendance)
+        setScannedData({
+          originalData: visitorName,
+          message: "Visitor attendance recorded successfully",
+          isValid: true,
+          personType: "visitor",
+          personName: visitorName,
+        });
+
+        // Cancel any previous speech before starting new one
+        cancelPreviousSpeech();
+
+        // Speak the message
+        speechTimeoutRef.current = setTimeout(() => {
+          speak("Attendance Saved. Thank You very much", {
+            rate: 0.8,
+            pitch: 1,
+            volume: 5,
+          });
+        }, 500);
+
+        // Clear overlay after 5 seconds
+        setTimeout(() => {
+          setScannedData("");
+        }, 5000);
 
         // Dispatch notification event
         window.dispatchEvent(
@@ -606,14 +645,39 @@ const AttendanceModal = ({ isOpen, onClose }) => {
             detail: {
               type: "visitor",
               title: "New Visitor Today",
-              message: `${response.data.data?.visitor_name || visitorForm.visitor_name} checked in.`,
+              message: `${visitorName} checked in.`,
             },
           }),
         );
       }
     } catch (error) {
       console.error("Error recording visitor:", error);
-      toast.error("Failed to record visitor attendance");
+
+      // Show error card overlay (same style as intern attendance)
+      setScannedData({
+        originalData: visitorForm.visitor_name,
+        message: error.message || "Failed to record visitor attendance",
+        isValid: false,
+        personType: "error",
+        personName: visitorForm.visitor_name,
+      });
+
+      // Cancel any previous speech before starting new one
+      cancelPreviousSpeech();
+
+      // Speak the message
+      speechTimeoutRef.current = setTimeout(() => {
+        speak("Attendance Unsuccessful", {
+          rate: 0.8,
+          pitch: 1,
+          volume: 5,
+        });
+      }, 500);
+
+      // Clear overlay after 5 seconds
+      setTimeout(() => {
+        setScannedData("");
+      }, 5000);
     } finally {
       setLoading(false);
     }
@@ -848,9 +912,16 @@ const AttendanceModal = ({ isOpen, onClose }) => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3 bg-orange-600 text-white font-bold uppercase tracking-widest rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
+                      className="w-full py-3 bg-orange-600 text-white font-bold uppercase tracking-widest rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      {loading ? "Recording..." : "Record Attendance"}
+                      {loading ? (
+                        <>
+                          <FiLoader className="animate-spin" />
+                          <span>Recording...</span>
+                        </>
+                      ) : (
+                        "Record Attendance"
+                      )}
                     </button>
                   </div>
                 </form>
@@ -1034,7 +1105,9 @@ const AttendanceModal = ({ isOpen, onClose }) => {
                       <div className="text-center">PM In</div>
                       <div className="text-center">PM Out</div>
                     </div>
-                    <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                    <div
+                      className={`space-y-2 pr-1 ${attendanceData.facultyToday.length > 3 ? "max-h-[280px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400" : ""}`}
+                    >
                       {attendanceData.facultyToday.length > 0 ? (
                         attendanceData.facultyToday.map((intern, index) => (
                           <div
@@ -1103,7 +1176,9 @@ const AttendanceModal = ({ isOpen, onClose }) => {
                       <div className="text-center">Time In</div>
                       <div className="text-center">Purpose</div>
                     </div>
-                    <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                    <div
+                      className={`space-y-2 pr-1 ${attendanceData.visitorsToday.length > 3 ? "max-h-[160px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400" : ""}`}
+                    >
                       {attendanceData.visitorsToday.length > 0 ? (
                         attendanceData.visitorsToday.map((visitor, index) => (
                           <div
@@ -1193,7 +1268,7 @@ const AttendanceModal = ({ isOpen, onClose }) => {
                   <>
                     <FiClock className="animate-pulse" />
                     <span>
-                      {scannedData.personType === "faculty"
+                      {scannedData.personType === "intern"
                         ? "Intern Attendance Recorded"
                         : "Visitor Attendance Recorded"}
                     </span>
@@ -1245,6 +1320,7 @@ const AttendanceModal = ({ isOpen, onClose }) => {
 
       {/* Manual Intern Search Modal */}
       <ManualInternSearchModal
+        key={manualSearchKey}
         isOpen={showManualSearchModal}
         onClose={closeManualSearchModal}
         onSelectIntern={handleManualInternSelect}

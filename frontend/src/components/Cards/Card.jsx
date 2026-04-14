@@ -1,26 +1,28 @@
-import React from 'react';
+import React from "react";
 
-export default function Card({ 
-  children, 
-  className = '', 
+export default function Card({
+  children,
+  className = "",
   title = null,
   subtitle = null,
   icon = null,
   headerRight = null,
   accentColor = null,
-  padding = 'p-6',
-  shadow = 'shadow-sm',
-  hoverShadow = 'hover:shadow-lg',
-  rounded = 'rounded-2xl',
-  border = 'border',
-  bg = 'bg-white',
-  transition = 'transition-all duration-300 ease-out',
-  hoverScale = 'hover:-translate-y-1'
+  padding = "p-6",
+  shadow = "shadow-sm",
+  hoverShadow = "hover:shadow-xl",
+  rounded = "rounded-2xl",
+  border = "border",
+  bg = "bg-white",
+  transition = "transition-all duration-150 ease-out",
+  hoverScale = "hover:-translate-y-[4px]",
 }) {
-  const accentClass = accentColor ? `border-l-4 ${accentColor}` : '';
-  
+  const accentClass = accentColor ? `border-l-4 ${accentColor}` : "";
+
   return (
-    <div className={`${bg} ${shadow} ${hoverShadow} ${rounded} ${border} ${padding} ${transition} ${hoverScale} ${accentClass} ${className}`}>
+    <div
+      className={`${bg} ${shadow} ${hoverShadow} ${rounded} ${border} ${padding} ${transition} ${hoverScale} ${accentClass} ${className}`}
+    >
       {(title || icon || headerRight || subtitle) && (
         <div className="mb-5">
           <div className="flex items-center justify-between">

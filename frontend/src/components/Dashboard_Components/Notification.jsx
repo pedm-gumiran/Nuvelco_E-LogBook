@@ -16,13 +16,53 @@ const Notification = ({
   onMarkAsRead,
   onMarkAllAsRead,
   onDelete,
+  externalIsOpen,
+  onToggle,
+  highlightedId,
+  onClearHighlight,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsOpen = onToggle !== undefined ? onToggle : setInternalIsOpen;
+
   const [activeTab, setActiveTab] = useState("all");
   const [hiddenReadIds, setHiddenReadIds] = useState(new Set());
   const [deletedIds, setDeletedIds] = useState(new Set());
   const dropdownRef = useRef(null);
   const readTimersRef = useRef({});
+  const itemRefs = useRef({});
+
+  // Effect to handle highlighting logic (scrolling + tab switching)
+  useEffect(() => {
+    if (isOpen && highlightedId) {
+      const notification = notifications.find((n) => n.id === highlightedId);
+      if (notification) {
+        // 1. Switch to appropriate tab if not in "all"
+        if (activeTab !== "all") {
+          if (notification.type === "intern") setActiveTab("intern");
+          else if (
+            notification.type === "school" ||
+            notification.type === "course"
+          )
+            setActiveTab("school-course");
+          else if (notification.type === "visitor") setActiveTab("visitor");
+        }
+
+        // 2. Scroll into view after a short delay to allow tab switching/render
+        setTimeout(() => {
+          const element = itemRefs.current[highlightedId];
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 100);
+
+        // 3. Optional: clear highlight after some time
+        if (onClearHighlight) {
+          setTimeout(onClearHighlight, 3000);
+        }
+      }
+    }
+  }, [isOpen, highlightedId, notifications]);
 
   // Load deleted notifications from localStorage on mount
   useEffect(() => {
@@ -126,7 +166,7 @@ const Notification = ({
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isOpen]);
 
   // Disable background scroll when dropdown is open
   useEffect(() => {
@@ -185,6 +225,15 @@ const Notification = ({
 
   return (
     <div className="relative" ref={dropdownRef}>
+      <style>{`
+        @keyframes pulse-subtle {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.8; }
+        }
+        .animate-pulse-subtle {
+          animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+      `}</style>
       {/* Bell Icon with Count Badge */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -272,8 +321,13 @@ const Notification = ({
               filteredNotifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${
+                  ref={(el) => (itemRefs.current[notification.id] = el)}
+                  className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-all duration-500 cursor-pointer ${
                     !notification.read ? "bg-blue-50/50" : ""
+                  } ${
+                    highlightedId === notification.id
+                      ? "ring-2 ring-inset ring-[#188b3e] bg-green-50 animate-pulse-subtle"
+                      : ""
                   }`}
                   onClick={() => {
                     if (!notification.read) {

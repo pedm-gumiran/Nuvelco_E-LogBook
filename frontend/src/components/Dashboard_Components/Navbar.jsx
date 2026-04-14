@@ -20,7 +20,59 @@ import Notification from "./Notification";
 import { useUser } from "../context/UserContext";
 import historyManager from "../../utils/historyManager.js";
 import axiosInstance from "../../api/axios.js";
-//import { supabase } from '../../supabaseClient';
+import { toast } from "react-toastify";
+import {
+  FaUserGraduate,
+  FaBuilding,
+  FaUserFriends,
+  FaInfoCircle,
+} from "react-icons/fa";
+
+// Mobile-style Notification Toast Component
+const NotificationToast = ({ notification }) => {
+  const getIcon = () => {
+    switch (notification.type) {
+      case "intern":
+        return <FaUserGraduate className="text-blue-500" />;
+      case "school":
+      case "course":
+        return <FaBuilding className="text-emerald-500" />;
+      case "visitor":
+        return <FaUserFriends className="text-orange-500" />;
+      default:
+        return <FaInfoCircle className="text-blue-500" />;
+    }
+  };
+
+  return (
+    <div className="flex flex-col w-full">
+      <div className="flex items-center justify-between mb-2 opacity-60">
+        <div className="flex items-center gap-2">
+          <div className="bg-[#188b3e] p-1 rounded-md">
+            <Client_Logo size={12} />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+            NUVELCO
+          </span>
+        </div>
+        <span className="text-[10px] font-bold text-gray-400">now</span>
+      </div>
+      <div className="flex items-start gap-3">
+        <div className="bg-gray-50 p-2.5 rounded-2xl shadow-inner border border-gray-100 flex-shrink-0">
+          <div className="text-xl">{getIcon()}</div>
+        </div>
+        <div className="flex-1 min-w-0 pt-0.5">
+          <p className="text-[14px] font-extrabold text-gray-900 leading-tight mb-1">
+            {notification.title}
+          </p>
+          <p className="text-[13px] text-gray-600 leading-snug font-medium line-clamp-2">
+            {notification.message}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function Navbar({ activeMenu = "", setIsModalOpen }) {
   const [menuOpen, setMenuOpen] = useState(false); // mobile menu
@@ -28,6 +80,10 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] =
     useState(false);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
+  const toastedIdsRef = useRef(new Set());
+  const isInitialLoadRef = useRef(true);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [highlightedNotifId, setHighlightedNotifId] = useState(null);
 
   // Load read status from localStorage
   const loadReadStatus = () => {
@@ -139,7 +195,7 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
             title: "New Visitor Today",
             message: `${visitor.visitor_name || "A visitor"} checked in.`,
             time: visitor.time_in
-              ? new Date(`2000-01-01T${visitor.time_in}`)
+              ? new Date(`${today}T${visitor.time_in}`)
               : new Date(),
             read: readStatus[id] || false,
             type: "visitor",
@@ -149,6 +205,31 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
 
       // Sort by time (newest first)
       newNotifications.sort((a, b) => b.time - a.time);
+
+      // Check for new notifications to toast
+      newNotifications.forEach((n) => {
+        if (!toastedIdsRef.current.has(n.id)) {
+          // Trigger toast if unread and not initial load
+          if (!n.read && !isInitialLoadRef.current) {
+            toast(<NotificationToast notification={n} />, {
+              onClick: () => {
+                setIsNotifOpen(true);
+                setHighlightedNotifId(n.id);
+              },
+              className:
+                "backdrop-blur-xl bg-white/80 border border-white/50 shadow-2xl rounded-2xl p-0 overflow-hidden",
+              bodyClassName: "p-4",
+              icon: false,
+            });
+          }
+          toastedIdsRef.current.add(n.id);
+        }
+      });
+
+      if (isInitialLoadRef.current) {
+        isInitialLoadRef.current = false;
+      }
+
       setNotifications(newNotifications.slice(0, 10));
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -584,6 +665,10 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
           onMarkAsRead={handleMarkAsRead}
           onMarkAllAsRead={handleMarkAllAsRead}
           onDelete={handleDeleteNotification}
+          externalIsOpen={isNotifOpen}
+          onToggle={setIsNotifOpen}
+          highlightedId={highlightedNotifId}
+          onClearHighlight={() => setHighlightedNotifId(null)}
         />
 
         {/* Mobile Menu Button - visible on small screens */}

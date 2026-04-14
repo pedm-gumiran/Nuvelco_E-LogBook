@@ -105,7 +105,7 @@ export default function App() {
             closeOnClick
             pauseOnHover
             draggable={false}
-            theme="colored"
+            theme="light"
             transition={Slide}
             limit={3}
           />

@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { FiDownload, FiCalendar, FiZoomIn, FiZoomOut, FiMaximize, FiMinimize, FiMaximize2 } from "react-icons/fi";
+import {
+  FiDownload,
+  FiCalendar,
+  FiZoomIn,
+  FiZoomOut,
+  FiMaximize,
+  FiMinimize,
+  FiMaximize2,
+} from "react-icons/fi";
 import Btn_X from "../Buttons/Btn_X.jsx";
 import Button from "../Buttons/Button.jsx";
 
@@ -558,14 +566,20 @@ const PreviewDtrModal = ({
           }
         }
       `}</style>
-      <div className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-all duration-300 ${isFullScreen ? "p-0" : "p-4"}`}>
-        <div 
+      <div
+        className={`fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-all duration-300 ${isFullScreen ? "p-0" : "p-4"}`}
+      >
+        <div
           className={`bg-white shadow-2xl flex flex-col overflow-hidden transition-all duration-500 ease-in-out ${
-            isFullScreen ? "w-full h-full rounded-none" : "w-full max-w-6xl max-h-[95vh] rounded-t-3xl rounded-b-lg"
+            isFullScreen
+              ? "w-full h-full rounded-none"
+              : "w-full max-w-6xl max-h-[95vh] rounded-t-3xl rounded-b-lg"
           }`}
         >
           {/* Header */}
-          <div className={`flex items-center justify-between px-6 py-4 bg-[#168e3f] shrink-0 print:hidden ${isFullScreen ? "rounded-none" : "rounded-t-3xl"}`}>
+          <div
+            className={`flex items-center justify-between px-6 py-4 bg-[#168e3f] shrink-0 print:hidden ${isFullScreen ? "rounded-none" : "rounded-t-3xl"}`}
+          >
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-semibold text-white">
                 DTR Preview - {selectedRecord.name}
@@ -604,7 +618,9 @@ const PreviewDtrModal = ({
                     <FiCalendar className="w-5 h-5 text-[#188b3e]" />
                     <select
                       value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                      onChange={(e) =>
+                        setSelectedMonth(parseInt(e.target.value))
+                      }
                       className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#188b3e] text-sm bg-white"
                     >
                       {Array.from({ length: 12 }, (_, i) => (
@@ -617,7 +633,9 @@ const PreviewDtrModal = ({
                     </select>
                     <select
                       value={selectedYear}
-                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                      onChange={(e) =>
+                        setSelectedYear(parseInt(e.target.value))
+                      }
                       className="px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#188b3e] text-sm bg-white"
                     >
                       {Array.from({ length: 5 }, (_, i) => {
@@ -682,293 +700,298 @@ const PreviewDtrModal = ({
                 }}
               >
                 {/* Nuvelco Paper Header */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  width: "auto",
-                  marginBottom: "4px",
-                  marginLeft: "-16px",
-                  marginRight: "-16px",
-                  paddingLeft: "16px",
-                  paddingRight: "16px",
-                }}
-              >
-                <img
-                  src="/system_logo.png"
-                  alt="Nuvelco Logo"
-                  style={{
-                    height: "80px",
-                    objectFit: "contain",
-                    flexShrink: 0,
-                  }}
-                />
-
-                {/* Nuvelco Center Title Image */}
                 <div
                   style={{
-                    flex: 1,
                     display: "flex",
+                    justifyContent: "space-between",
                     alignItems: "center",
-                    padding: "0 8px",
+                    width: "auto",
+                    marginBottom: "4px",
+                    marginLeft: "-16px",
+                    marginRight: "-16px",
+                    paddingLeft: "16px",
+                    paddingRight: "16px",
                   }}
                 >
                   <img
-                    src="/Nuvelco_title.png"
-                    alt="Nuvelco Title"
+                    src="/system_logo.png"
+                    alt="Nuvelco Logo"
                     style={{
-                      height: "95%",
-                      width: "95%",
+                      height: "80px",
                       objectFit: "contain",
-                      objectPosition: "left center",
+                      flexShrink: 0,
+                    }}
+                  />
+
+                  {/* Nuvelco Center Title Image */}
+                  <div
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "0 8px",
+                    }}
+                  >
+                    <img
+                      src="/Nuvelco_title.png"
+                      alt="Nuvelco Title"
+                      style={{
+                        height: "95%",
+                        width: "95%",
+                        objectFit: "contain",
+                        objectPosition: "left center",
+                      }}
+                    />
+                  </div>
+
+                  <img
+                    src="/nuvelco_establishment.png"
+                    alt="Nuvelco Establishment"
+                    style={{
+                      height: "80px",
+                      objectFit: "contain",
+                      flexShrink: 0,
                     }}
                   />
                 </div>
 
-                <img
-                  src="/nuvelco_establishment.png"
-                  alt="Nuvelco Establishment"
-                  style={{
-                    height: "80px",
-                    objectFit: "contain",
-                    flexShrink: 0,
-                  }}
-                />
-              </div>
-
-              {/* Motto and Green lines */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  width: "auto",
-                  marginLeft: "-16px",
-                  marginRight: "-16px",
-                  marginBottom: "16px",
-                }}
-              >
-                <div
-                  style={{
-                    flex: 1,
-                    borderTop: "3px solid #168e3f",
-                    borderBottom: "1px solid #168e3f",
-                    height: "5px",
-                    minWidth: "20px",
-                  }}
-                ></div>
-                <div
-                  style={{
-                    padding: "0 12px",
-                    color: "#74d3a6",
-                    fontStyle: "italic",
-                    fontFamily:
-                      '"Brush Script MT", "Brush Script Std", "Lucida Calligraphy", "Lucida Handwriting", "Apple Chancery", cursive',
-                    fontSize: "22px",
-                    fontWeight: "500",
-                    letterSpacing: "0.5px",
-                    textShadow: "1px 1px 0px rgba(255,255,255,0.5)",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  "Basta sama-sama, kaya."
-                </div>
-                <div
-                  style={{
-                    width: "40px",
-                    borderTop: "3px solid #168e3f",
-                    borderBottom: "1px solid #168e3f",
-                    height: "5px",
-                  }}
-                ></div>
-              </div>
-
-              {/* DTR Title - centered below header */}
-              <div style={{ textAlign: "center", margin: "10px 0 8px" }}>
-                <div
-                  style={{
-                    fontWeight: "800",
-                    fontSize: "20px",
-                    letterSpacing: "0.5px",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  DAILY TIME RECORD
-                </div>
-                <div style={{ fontSize: "15px", marginTop: "2px" }}>
-                  (On the Job Training)
-                </div>
-              </div>
-
-              {/* DTR Header Info */}
-              <div
-                className="mb-2 text-xs space-y-0.5"
-                style={{ fontSize: "15px" }}
-              >
-                <div>
-                  <strong>Name:</strong> {selectedRecord.name}
-                </div>
-                <div>
-                  <strong>School:</strong> {selectedRecord.school || "N/A"}
-                </div>
-                <div>
-                  <strong>Course:</strong> {selectedRecord.course || "Intern"}
-                </div>
-                <div>
-                  <strong>Month:</strong> {monthName}
-                </div>
-              </div>
-
-              {/* Two Column DTR Tables */}
-              <div className="flex gap-4 mt-6">
-                {/* Left Side - Days 1-15 */}
-                <div className="flex-1">
-                  {renderDtrTable(leftRows, 1, false)}
-                </div>
-
-                {/* Right Side - Days 16-31 */}
-                <div className="flex-1">
-                  {renderDtrTable(rightRows, 16, true)}
-                </div>
-              </div>
-
-              {/* Centered Certification Statement */}
-              <div
-                className="mt-30 text-center text-xs w-full relative"
-                style={{ marginTop: "30px" }}
-              >
-                {/* Empty element to act as the requested empty row before the certification */}
-                <div className="h-6"></div>
-                <p className="text-center" style={{ fontSize: "15px" }}>
-                  I hereby certify that the above records are true and correct.
-                </p>
-                <div className="mt-16 block w-full text-center">
-                  <div
-                    style={{
-                      marginTop: "60px",
-                      borderTop: "1px solid black",
-                      width: "300px",
-                      margin: "0 auto",
-                    }}
-                  ></div>
-                  <div
-                    style={{
-                      marginTop: "12px",
-                      fontWeight: "600",
-                      fontSize: "15px",
-                      textAlign: "center",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                      display: "block",
-                    }}
-                  >
-                    EMPLOYEE'S SIGNATURE
-                  </div>
-                </div>
-              </div>
-
-              {/* Document Footer - Contact Info */}
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "0",
-                  left: "0",
-                  right: "0",
-                }}
-              >
-                {/* Double green line */}
-                <div
-                  style={{
-                    borderTop: "3px solid #168e3f",
-                    borderBottom: "1px solid #168e3f",
-                    height: "5px",
-                    width: "100%",
-                  }}
-                ></div>
-                {/* Contact info row */}
+                {/* Motto and Green lines */}
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    gap: "32px",
-                    padding: "10px 0",
-                    flexWrap: "wrap",
+                    width: "auto",
+                    marginLeft: "-16px",
+                    marginRight: "-16px",
+                    marginBottom: "16px",
                   }}
                 >
-                  {/* Website */}
                   <div
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      fontSize: "11px",
-                      color: "#333",
+                      flex: 1,
+                      borderTop: "3px solid #168e3f",
+                      borderBottom: "1px solid #168e3f",
+                      height: "5px",
+                      minWidth: "20px",
+                    }}
+                  ></div>
+                  <div
+                    style={{
+                      padding: "0 12px",
+                      color: "#74d3a6",
+                      fontStyle: "italic",
+                      fontFamily:
+                        '"Brush Script MT", "Brush Script Std", "Lucida Calligraphy", "Lucida Handwriting", "Apple Chancery", cursive',
+                      fontSize: "22px",
+                      fontWeight: "500",
+                      letterSpacing: "0.5px",
+                      textShadow: "1px 1px 0px rgba(255,255,255,0.5)",
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    <img
-                      src="/globe.png"
-                      alt="Website"
-                      style={{
-                        width: "22px",
-                        height: "22px",
-                        objectFit: "contain",
-                      }}
-                    />
-                    <span style={{ color: "#555" }}>|</span>
-                    <span>www.nuvelco.com</span>
+                    "Basta sama-sama, kaya."
                   </div>
-                  {/* Email */}
                   <div
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      fontSize: "11px",
+                      width: "40px",
+                      borderTop: "3px solid #168e3f",
+                      borderBottom: "1px solid #168e3f",
+                      height: "5px",
+                    }}
+                  ></div>
+                </div>
+
+                {/* DTR Title - centered below header */}
+                <div style={{ textAlign: "center", margin: "10px 0 8px" }}>
+                  <div
+                    style={{
+                      fontWeight: "800",
+                      fontSize: "20px",
+                      letterSpacing: "0.5px",
+                      textTransform: "uppercase",
                     }}
                   >
-                    <img
-                      src="/email.png"
-                      alt="Email"
+                    DAILY TIME RECORD
+                  </div>
+                  <div style={{ fontSize: "15px", marginTop: "2px" }}>
+                    (On the Job Training)
+                  </div>
+                </div>
+
+                {/* DTR Header Info */}
+                <div
+                  className="mb-2 text-xs space-y-0.5"
+                  style={{ fontSize: "15px" }}
+                >
+                  <div>
+                    <strong>Name:</strong> {selectedRecord.name}
+                  </div>
+                  <div>
+                    <strong>School:</strong> {selectedRecord.school || "N/A"}
+                  </div>
+                  <div>
+                    <strong>Course:</strong> {selectedRecord.course || "Intern"}
+                  </div>
+                  <div>
+                    <strong>Month:</strong> {monthName}
+                  </div>
+                </div>
+
+                {/* Two Column DTR Tables */}
+                <div className="flex gap-4 mt-6">
+                  {/* Left Side - Days 1-15 */}
+                  <div className="flex-1">
+                    {renderDtrTable(leftRows, 1, false)}
+                  </div>
+
+                  {/* Right Side - Days 16-31 */}
+                  <div className="flex-1">
+                    {renderDtrTable(rightRows, 16, true)}
+                  </div>
+                </div>
+
+                {/* Centered Certification Statement */}
+                <div
+                  className="mt-30 text-center text-xs w-full relative"
+                  style={{ marginTop: "20px" }}
+                >
+                  {/* Empty element to act as the requested empty row before the certification */}
+                  <div className="h-6"></div>
+                  <p
+                    className="text-center"
+                    style={{ fontSize: "15px", marginBottom: "20px" }}
+                  >
+                    I hereby certify that the above records are true and
+                    correct.
+                  </p>
+                  <div className="mt-16 block w-full text-center ml-20">
+                    <div
                       style={{
-                        width: "22px",
-                        height: "22px",
-                        objectFit: "contain",
+                        marginTop: "50px",
+                        marginLeft: "100px",
+                        borderTop: "1px solid black",
+                        width: "450px",
                       }}
-                    />
-                    <span style={{ color: "#555" }}>|</span>
-                    <a
-                      href="mailto:hq@nuvelco.com"
-                      style={{ color: "#1a56db", textDecoration: "none" }}
+                    ></div>
+                    <div
+                      style={{
+                        marginTop: "12px",
+                        fontWeight: "600",
+                        fontSize: "15px",
+                        textAlign: "center",
+                        marginRight: "25px",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                        display: "block",
+                      }}
                     >
-                      hq@nuvelco.com
-                    </a>
+                      EMPLOYEE'S SIGNATURE
+                    </div>
                   </div>
-                  {/* Phone */}
+                </div>
+
+                {/* Document Footer - Contact Info */}
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "0",
+                    left: "0",
+                    right: "0",
+                  }}
+                >
+                  {/* Double green line */}
+                  <div
+                    style={{
+                      borderTop: "3px solid #168e3f",
+                      borderBottom: "1px solid #168e3f",
+                      height: "5px",
+                      width: "100%",
+                    }}
+                  ></div>
+                  {/* Contact info row */}
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "8px",
-                      color: "#333",
+                      justifyContent: "center",
+                      gap: "32px",
+                      padding: "10px 0",
+                      flexWrap: "wrap",
                     }}
                   >
-                    <img
-                      src="/Telephone.png"
-                      alt="Phone"
+                    {/* Website */}
+                    <div
                       style={{
-                        width: "22px",
-                        height: "22px",
-                        objectFit: "contain",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        fontSize: "11px",
+                        color: "#333",
                       }}
-                    />
-                    <span style={{ color: "#555" }}>|</span>
-                    <span>0917-312-5775</span>
+                    >
+                      <img
+                        src="/globe.png"
+                        alt="Website"
+                        style={{
+                          width: "22px",
+                          height: "22px",
+                          objectFit: "contain",
+                        }}
+                      />
+                      <span style={{ color: "#555" }}>|</span>
+                      <span>www.nuvelco.com</span>
+                    </div>
+                    {/* Email */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        fontSize: "11px",
+                      }}
+                    >
+                      <img
+                        src="/email.png"
+                        alt="Email"
+                        style={{
+                          width: "22px",
+                          height: "22px",
+                          objectFit: "contain",
+                        }}
+                      />
+                      <span style={{ color: "#555" }}>|</span>
+                      <a
+                        href="mailto:hq@nuvelco.com"
+                        style={{ color: "#1a56db", textDecoration: "none" }}
+                      >
+                        hq@nuvelco.com
+                      </a>
+                    </div>
+                    {/* Phone */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        color: "#333",
+                      }}
+                    >
+                      <img
+                        src="/Telephone.png"
+                        alt="Phone"
+                        style={{
+                          width: "22px",
+                          height: "22px",
+                          objectFit: "contain",
+                        }}
+                      />
+                      <span style={{ color: "#555" }}>|</span>
+                      <span>0917-312-5775</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
           </div>
 
           {/* Footer */}
