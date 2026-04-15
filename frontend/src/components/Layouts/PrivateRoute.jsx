@@ -1,23 +1,23 @@
-// src/components/ProtectedRoute.jsx
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useSupabaseAuth } from '../../context/supabase_auth/supabaseAuth.js';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useUser } from "../context/UserContext.jsx";
+import LoadingSpinner from "../Loading_UI/LoadingSpinner.jsx";
 
-export default function ProtectedRoute({ children }) {
-  const { user, loading } = useSupabaseAuth();
+export default function PrivateRoute({ children }) {
+  const { user, loading } = useUser();
 
   // While checking (avoid flash)
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        Loading...
+        <LoadingSpinner />
       </div>
     );
   }
 
-  // If not logged in → redirect to login
+  // If not logged in → redirect to landing page
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

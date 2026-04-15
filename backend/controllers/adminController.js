@@ -11,15 +11,20 @@ exports.getAdmin = async (req, res) => {
   }
 };
 
+const MIN_ADMINS = 3; // Minimum admins required before hiding register menu
+
 /* CHECK IF ADMIN EXISTS */
 exports.checkAdminExists = async (req, res) => {
   try {
     const admins = await User.getAllAdmin();
-    const exists = admins && admins.length > 0;
+    const count = admins ? admins.length : 0;
+    // Hide register menu only when minimum admins exist
+    const hasMinimumAdmins = count >= MIN_ADMINS;
     res.status(200).json({
       success: true,
-      exists: exists,
-      count: admins ? admins.length : 0,
+      exists: hasMinimumAdmins,
+      count: count,
+      minRequired: MIN_ADMINS,
     });
   } catch (err) {
     console.error(err);
@@ -243,12 +248,16 @@ exports.getAdminProfile = async (req, res) => {
     const { id } = req.params;
     const admin = await User.getAdminById(id);
     if (!admin) {
-      return res.status(404).json({ success: false, message: "Admin not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Admin not found" });
     }
     res.status(200).json({ success: true, data: admin });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: "Failed to fetch profile" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch profile" });
   }
 };
 
@@ -260,13 +269,20 @@ exports.updateAdminProfile = async (req, res) => {
 
     // Check required fields (password and pin_code are now optional for the update)
     if (!first_name || !last_name || !username) {
-      return res.status(400).json({ success: false, message: "First name, last name, and username are required" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "First name, last name, and username are required",
+        });
     }
 
     // Fetch the current admin to get existing data if none is provided
     const currentAdmin = await User.getAdminById(id);
     if (!currentAdmin) {
-      return res.status(404).json({ success: false, message: "Admin not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Admin not found" });
     }
 
     // Use new values if provided, otherwise keep existing
@@ -283,12 +299,16 @@ exports.updateAdminProfile = async (req, res) => {
       last_name,
       username,
       finalPassword,
-      finalPinCode
+      finalPinCode,
     );
 
-    res.status(200).json({ success: true, message: "Profile updated successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Profile updated successfully" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: "Failed to update profile" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update profile" });
   }
 };
