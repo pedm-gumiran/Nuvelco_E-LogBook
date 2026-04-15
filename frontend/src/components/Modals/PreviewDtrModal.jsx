@@ -7,6 +7,7 @@ import {
   FiMaximize,
   FiMinimize,
   FiMaximize2,
+  FiInfo,
 } from "react-icons/fi";
 import Btn_X from "../Buttons/Btn_X.jsx";
 import Button from "../Buttons/Button.jsx";
@@ -38,6 +39,39 @@ const PreviewDtrModal = ({
   const [zoomScale, setZoomScale] = useState(80);
   const [isFullScreen, setIsFullScreen] = useState(true);
 
+  // Disable body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      window.scrollTo(0, parseInt(scrollY || "0") * -1);
+    }
+
+    return () => {
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      window.scrollTo(0, parseInt(scrollY || "0") * -1);
+    };
+  }, [isOpen]);
+
   const handleZoom = (type) => {
     if (type === "in") setZoomScale((prev) => Math.min(prev + 10, 150));
     else if (type === "out") setZoomScale((prev) => Math.max(prev - 10, 20));
@@ -47,10 +81,8 @@ const PreviewDtrModal = ({
   // Parse date as local time
   const parseLocalDate = (dateStr) => {
     if (!dateStr) return null;
-    const datePart = dateStr.split(/[ T]/)[0];
-    const [year, month, day] = datePart.split("-").map(Number);
-    if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
-    return new Date(year, month - 1, day);
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? null : date;
   };
 
   // Format time to 12-hour format
@@ -133,7 +165,7 @@ const PreviewDtrModal = ({
     const totalHours =
       amHours || pmHours
         ? (parseFloat(amHours || 0) + parseFloat(pmHours || 0)).toFixed(2)
-        : "";
+        : "0.00";
 
     return {
       amIn: record.amIn && record.amIn !== "--" ? record.amIn : "",
@@ -651,6 +683,48 @@ const PreviewDtrModal = ({
                   <h4 className="text-lg font-semibold text-gray-900">
                     {monthName}
                   </h4>
+
+                  {/* Calculation Legend Tooltip */}
+                  <div className="relative group ml-1">
+                    <button className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-full transition-colors">
+                      <FiInfo size={18} />
+                    </button>
+                    
+                    {/* Tooltip Content */}
+                    <div className="absolute left-0 top-full mt-2 hidden group-hover:block w-72 bg-white rounded-xl shadow-2xl border border-gray-100 p-4 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="space-y-3">
+                        <h5 className="font-bold text-gray-900 text-sm border-b pb-2">Calculation Logic</h5>
+                        <div className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></div>
+                            <p className="text-[11px] text-gray-600">
+                              <span className="font-bold text-gray-800">Daily Total:</span> Calculated as (AM Hours) + (PM Hours).
+                            </p>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0"></div>
+                            <p className="text-[11px] text-gray-600">
+                              <span className="font-bold text-gray-800">Lunch Break:</span> Time between 12:00 PM and 1:59 PM is automatically deducted.
+                            </p>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0"></div>
+                            <p className="text-[11px] text-gray-600">
+                              <span className="font-bold text-gray-800">Incomplete:</span> Shows <span className="font-mono text-red-600 bg-red-50 px-1 rounded">0.00</span> if a Time In or Out is missing.
+                            </p>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 shrink-0"></div>
+                            <p className="text-[11px] text-gray-600">
+                              <span className="font-bold text-gray-800">Grand Total:</span> Sum of all daily totals, formatted as Hours.Minutes.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Arrow (Pointing Up) */}
+                      <div className="absolute bottom-full left-3 -mb-1 border-8 border-transparent border-b-white"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

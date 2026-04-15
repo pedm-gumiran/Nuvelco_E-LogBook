@@ -489,6 +489,11 @@ const AttendanceModal = ({ isOpen, onClose }) => {
       setTimeout(() => fetchAttendanceData(), 1000);
       // Reset manual search modal key to clear its data
       setManualSearchKey((prev) => prev + 1);
+      // Set flag and dispatch event after delay (to show notification first)
+      setTimeout(() => {
+        localStorage.setItem("attendanceUpdated", Date.now().toString());
+        window.dispatchEvent(new CustomEvent("attendance-recorded"));
+      }, 1500);
     }
   };
 
@@ -612,6 +617,12 @@ const AttendanceModal = ({ isOpen, onClose }) => {
         });
         // Refresh data
         fetchAttendanceData();
+        // Set flag for homepage to refresh when user returns (delayed to show notification first)
+        setTimeout(() => {
+          localStorage.setItem("attendanceUpdated", Date.now().toString());
+          // Dispatch event to update homepage counters
+          window.dispatchEvent(new CustomEvent("attendance-recorded"));
+        }, 1500);
 
         // Show success card overlay (same style as intern attendance)
         setScannedData({

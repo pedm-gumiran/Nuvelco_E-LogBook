@@ -200,27 +200,24 @@ const Notification = ({
     const ampm = hours >= 12 ? "PM" : "AM";
 
     hours = hours % 12;
-    hours = hours ? hours : 12; // 0 should be 12
+    hours = hours ? hours : 12;
 
     const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
     ];
     const month = monthNames[date.getMonth()];
     const day = date.getDate();
     const year = date.getFullYear();
 
-    return `${hours}:${minutes} ${ampm} this ${month} ${day}, ${year}`;
+    const now = new Date();
+    const isToday =
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear();
+    const datePrefix = isToday ? "this" : "last";
+
+    return `${hours}:${minutes} ${ampm} ${datePrefix} ${month} ${day}, ${year}`;
   };
 
   return (

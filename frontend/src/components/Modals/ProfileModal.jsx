@@ -1,90 +1,240 @@
-import React, { useEffect } from 'react';
-import { useUser } from '../context/UserContext';
+import React, { useState, useEffect } from "react";
+import { FiUser, FiSave, FiX, FiLoader } from "react-icons/fi";
+import { toast } from "react-toastify";
+import axios from "../../api/axios.js";
+import { useUser } from "../context/UserContext";
+import Input_Text from "../Input_Fields/Input_Text.jsx";
+import Input_Password from "../Input_Fields/Input_Password.jsx";
 
-import Btn_X from '../Buttons/Btn_X';
+const ProfileModal = ({ isOpen, onClose }) => {
+  const { user, setUser } = useUser();
 
-export default function ProfileModal({ isOpen, onClose }) {
-  const { user } = useUser(); // dynamic logged-in user
-
-
-
-
-
-  // Prevent body scroll when modal is isopen
+  // Disable body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden'; // disable scroll
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = ''; // enable scroll
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      window.scrollTo(0, parseInt(scrollY || "0") * -1);
     }
 
-    // Clean up when component unmounts
     return () => {
-      document.body.style.overflow = '';
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      window.scrollTo(0, parseInt(scrollY || "0") * -1);
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    username: "",
+    password: "",
+    pin_code: "",
+  });
 
-  const getInitials = (firstName = '', lastName = '') => {
-    if (!firstName && !lastName) return 'U';
-    return `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase();
+  // Fetch current admin profile when modal opens
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (isOpen && user?.id) {
+        setFetching(true);
+        try {
+          const response = await axios.get(`/admin/profile/${user.id}`);
+          if (response.data.success) {
+            const data = response.data.data;
+            setFormData({
+              first_name: data.first_name || "",
+              last_name: data.last_name || "",
+              username: data.username || "",
+              password: "", // Don't pre-fill password for security
+              pin_code: "", // Don't pre-fill pin code for security
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+          toast.error("Failed to load profile information");
+        } finally {
+          setFetching(false);
+        }
+      }
+    };
+
+    fetchProfile();
+  }, [isOpen, user?.id]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/20" onClick={onClose}></div>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!user?.id) return;
 
-      {/* Modal Content */}
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] z-10 mx-4 sm:mx-0 flex flex-col">
+    setLoading(true);
+    try {
+      const response = await axios.put(`/admin/profile/${user.id}`, formData);
+      if (response.data.success) {
+        toast.success("Profile updated successfully");
+        // Update user context with new name/username
+        const updatedUser = {
+          ...user,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          username: formData.username,
+        };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b shadow-sm border-gray-200 sticky top-0 bg-white z-10 rounded-t-2xl">
-          <h2 className="text-lg font-semibold">Profile</h2>
-          <Btn_X onClick={onClose} />
+        <div className="bg-gradient-to-r from-[#188b3e] to-[#147a35] px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 p-2 rounded-lg">
+              <FiUser className="text-white w-5 h-5" />
+            </div>
+            <h3 className="text-lg font-bold text-white">Manage Profile</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-white/80 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+          >
+            <FiX size={24} />
+          </button>
         </div>
 
-        {/* Scrollable Details */}
-        <div className="p-6 overflow-y-auto flex-1">
-          {/* Profile Picture */}
-          <div className="flex flex-col items-center mb-6">
-            {user?.profilePicture ? (
-              <img
-                src={user.profilePicture}
-                alt="Profile"
-                className="w-20 h-20 rounded-full border border-gray-200 shadow-sm"
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-gray-600 text-white flex items-center justify-center text-2xl font-bold">
-                {getInitials(user?.first_name, user?.last_name)}
+        {/* Content */}
+        <div className="p-6">
+          {fetching ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <FiLoader className="w-10 h-10 text-[#188b3e] animate-spin mb-4" />
+              <p className="text-gray-500 font-medium">Loading profile...</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* First Name */}
+                <Input_Text
+                  label="First Name"
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  required
+                  placeholder="First name"
+                />
+
+                {/* Last Name */}
+                <Input_Text
+                  label="Last Name"
+                  name="last_name"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Last name"
+                />
               </div>
-            )}
-          </div>
 
-          {/* User Details */}
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                First Name
-              </label>
-              <div className="text-gray-900">{user?.first_name || '-'}</div>
-            </div>
+              {/* Username */}
+              <Input_Text
+                label="Username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                placeholder="Enter username"
+              />
 
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                Last Name
-              </label>
-              <div className="text-gray-900">{user?.last_name || '-'}</div>
-            </div>
+              {/* Password */}
+              <div className="space-y-1">
+                <Input_Password
+                  label="Password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter new password (optional)"
+                />
+                <p className="text-[10px] text-gray-400 italic ml-1">
+                  Leave blank to keep existing password
+                </p>
+              </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-600">Email</label>
-              <div className="text-gray-900">{user?.email || '-'}</div>
-            </div>
+              {/* Pin Code */}
+              <div className="space-y-1">
+                <Input_Text
+                  label="Pin Code"
+                  name="pin_code"
+                  type="text"
+                  value={formData.pin_code}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 6) handleChange(e);
+                  }}
+                  placeholder="Enter new 6-digit pin (optional)"
+                />
+                <p className="text-[10px] text-gray-400 italic ml-1">
+                  Leave blank to keep existing pin code
+                </p>
+              </div>
 
-          </div>
+              {/* Actions */}
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-[2] px-4 py-2.5 bg-[#188b3e] hover:bg-[#147a35] text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#188b3e]/20 disabled:opacity-70"
+                >
+                  {loading ? (
+                    <FiLoader className="animate-spin w-5 h-5" />
+                  ) : (
+                    <FiSave className="w-5 h-5" />
+                  )}
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default ProfileModal;

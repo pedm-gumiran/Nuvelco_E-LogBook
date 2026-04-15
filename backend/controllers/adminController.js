@@ -225,3 +225,55 @@ exports.resetPassword = async (req, res) => {
       .json({ success: false, message: "Failed to update password" });
   }
 };
+
+/* GET ADMIN PROFILE */
+exports.getAdminProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const admin = await User.getAdminById(id);
+    if (!admin) {
+      return res.status(404).json({ success: false, message: "Admin not found" });
+    }
+    res.status(200).json({ success: true, data: admin });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Failed to fetch profile" });
+  }
+};
+
+/* UPDATE ADMIN PROFILE */
+exports.updateAdminProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { first_name, last_name, username, password, pin_code } = req.body;
+
+    // Check required fields (password and pin_code are now optional for the update)
+    if (!first_name || !last_name || !username) {
+      return res.status(400).json({ success: false, message: "First name, last name, and username are required" });
+    }
+
+    // Fetch the current admin to get existing data if none is provided
+    const currentAdmin = await User.getAdminById(id);
+    if (!currentAdmin) {
+      return res.status(404).json({ success: false, message: "Admin not found" });
+    }
+
+    // Use new values if provided, otherwise keep existing
+    const finalPassword = password || currentAdmin.password;
+    const finalPinCode = pin_code || currentAdmin.pin_code;
+
+    await User.updateAdmin(
+      id,
+      first_name,
+      last_name,
+      username,
+      finalPassword,
+      finalPinCode
+    );
+
+    res.status(200).json({ success: true, message: "Profile updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Failed to update profile" });
+  }
+};

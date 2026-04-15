@@ -15,6 +15,7 @@ const ExportFilenameModal = ({
   isOpen,
   onClose,
   onConfirm,
+  isLoading = false,
   defaultName = '',
   itemName = 'Data'
 }) => {
@@ -35,11 +36,14 @@ const ExportFilenameModal = ({
     e.preventDefault()
     if (filename.trim()) {
       onConfirm(filename.trim())
-      onClose()
+      // Don't close immediately here, the parent will handle it after the async export finishes
+      // or if we want to close it here, we should check isLoading.
+      // But since we want the MODAL to show loading, we shouldn't onClose() here.
     }
   }
 
   const handleClose = () => {
+    if (isLoading) return;
     setFilename('')
     onClose()
   }
@@ -80,8 +84,9 @@ const ExportFilenameModal = ({
               value={filename}
               onChange={(e) => setFilename(e.target.value)}
               placeholder="Enter filename..."
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-[#188b3e] focus:ring-2 focus:ring-blue-200 bg-white outline-none transition-all"
+              className={`w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-[#188b3e] focus:ring-2 focus:ring-blue-200 bg-white outline-none transition-all ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}
               autoFocus
+              disabled={isLoading}
             />
             <p className="text-xs text-gray-500">
               The file will be saved as: <span className="font-medium text-gray-700">{filename || 'export'}.xlsx</span>
@@ -95,12 +100,15 @@ const ExportFilenameModal = ({
             <Button
               variant="modal-secondary"
               onClick={handleClose}
+              disabled={isLoading}
               label="Cancel"
             />
             <Button
               variant="modal-primary"
               onClick={handleSubmit}
               label="Export"
+              isLoading={isLoading}
+              loadingText="Exporting..."
               icon={<FiDownload className="w-4 h-4" />}
             />
           </div>

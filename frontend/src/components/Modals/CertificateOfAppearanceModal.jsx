@@ -10,6 +10,7 @@ import {
   FiMaximize,
   FiMinimize,
   FiMaximize2,
+  FiRotateCcw,
 } from "react-icons/fi";
 import Button from "../Buttons/Button.jsx";
 
@@ -26,6 +27,7 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
   const [showPreview, setShowPreview] = useState(true);
   const [zoomScale, setZoomScale] = useState(65); // Initial zoom to see full page
   const [isFullScreen, setIsFullScreen] = useState(true); // Default full screen
+  const fileInputRef = useRef(null);
 
   // Editable fields for the certificate
   const [certData, setCertData] = useState({
@@ -278,6 +280,17 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
     if (type === "in") setZoomScale((prev) => Math.min(prev + 10, 150));
     else if (type === "out") setZoomScale((prev) => Math.max(prev - 10, 20));
     else setZoomScale(65);
+  };
+
+  const handleResetSignature = () => {
+    setCertData((prev) => ({
+      ...prev,
+      signatureImage: "/signature.png",
+    }));
+    // Clear the file input value so we can re-upload the same file if needed
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   if (!isOpen) return null;
@@ -534,6 +547,7 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                   <div className="flex-1 relative group">
                     <input
                       type="file"
+                      ref={fileInputRef}
                       accept="image/*"
                       onChange={handleImageUpload}
                       className="absolute inset-0 opacity-0 cursor-pointer z-10"
@@ -545,6 +559,15 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                         : "Click to Upload"}
                     </div>
                   </div>
+                  {certData.signatureImage !== "/signature.png" && (
+                    <button
+                      onClick={handleResetSignature}
+                      className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors"
+                      title="Restore Default Signature"
+                    >
+                      <FiRotateCcw size={16} />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -918,18 +941,18 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
           </p>
           <div className="flex gap-3">
             <Button
+              onClick={onClose}
+              label="Close"
+              variant="modal-secondary"
+              size="lg"
+            />
+            <Button
               onClick={handlePrint}
               label="Print Certificate"
               variant="modal-primary"
               size="lg"
               icon={<FiPrinter size={18} />}
               className="px-8"
-            />
-            <Button
-              onClick={onClose}
-              label="Close"
-              variant="modal-secondary"
-              size="lg"
             />
           </div>
         </div>

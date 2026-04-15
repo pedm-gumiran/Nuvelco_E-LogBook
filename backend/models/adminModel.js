@@ -38,10 +38,10 @@ exports.createAdmin = async (
 };
 
 /* UPDATE / EDIT */
-exports.updateAdmin = async (id, firstName, lastName, username, pinCode) => {
+exports.updateAdmin = async (id, firstName, lastName, username, password, pinCode) => {
   const [result] = await db.execute(
-    "UPDATE admin SET first_name = ?, last_name = ?, username = ?, pin_code = ? WHERE id = ?",
-    [firstName, lastName, username, pinCode, id],
+    "UPDATE admin SET first_name = ?, last_name = ?, username = ?, password = ?, pin_code = ? WHERE id = ?",
+    [firstName, lastName, username, password, pinCode, id],
   );
   return result.affectedRows;
 };

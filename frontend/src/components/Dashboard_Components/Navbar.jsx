@@ -13,7 +13,7 @@ import {
   FaSchool,
   FaBell,
 } from "react-icons/fa";
-import ChangePasswordModal from "../Modals/ChangePasswordModal";
+import ProfileModal from "../Modals/ProfileModal";
 import ConfirmationBox from "../Modals/ConfirmationBox";
 import Client_Logo from "../Logo/Client_Logo";
 import Notification from "./Notification";
@@ -26,6 +26,7 @@ import {
   FaBuilding,
   FaUserFriends,
   FaInfoCircle,
+  FaUser,
 } from "react-icons/fa";
 
 // Mobile-style Notification Toast Component
@@ -77,13 +78,12 @@ const NotificationToast = ({ notification }) => {
 export default function Navbar({ activeMenu = "", setIsModalOpen }) {
   const [menuOpen, setMenuOpen] = useState(false); // mobile menu
   const [openSubmenu, setOpenSubmenu] = useState({});
-  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] =
-    useState(false);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
   const toastedIdsRef = useRef(new Set());
   const isInitialLoadRef = useRef(true);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [highlightedNotifId, setHighlightedNotifId] = useState(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Load read status from localStorage
   const loadReadStatus = () => {
@@ -103,100 +103,100 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
   // Notifications state - fetch from database
   const [notifications, setNotifications] = useState([]);
 
-  // Fetch notifications from API (today's data only)
+  // Fetch notifications from API
   const fetchNotifications = async () => {
     try {
-      const today = new Date().toISOString().split("T")[0];
+      // Use local date for comparisons (YYYY-MM-DD)
+      const now = new Date();
+      const localToday = now.toLocaleDateString("en-CA");
+      
       const [internsRes, schoolsRes, coursesRes, visitorsRes] =
         await Promise.all([
           axiosInstance.get("/intern?limit=10&order=desc"),
           axiosInstance.get("/school?limit=10&order=desc"),
           axiosInstance.get("/course?limit=10&order=desc"),
-          axiosInstance.get(`/visitor-attendance?date=${today}`),
+          axiosInstance.get("/visitor-attendance"), // Fetch recent visitors
         ]);
 
       // Load saved read status
       const readStatus = loadReadStatus();
       const newNotifications = [];
 
-      // Add new intern notifications from today
+      // Add all recent intern notifications
       if (internsRes.data.success && internsRes.data.data) {
         internsRes.data.data.forEach((intern) => {
           if (!intern.created_at) return;
           const createdAt = new Date(intern.created_at);
           if (isNaN(createdAt.getTime())) return;
-          const isToday = createdAt.toISOString().split("T")[0] === today;
-          if (isToday) {
-            const id = `intern-${intern.id}`;
-            newNotifications.push({
-              id,
-              title: "New Intern Registered",
-              message: `${intern.first_name} ${intern.last_name} ${intern.suffix || ""} has been registered successfully.`,
-              time: createdAt,
-              read: readStatus[id] || false,
-              type: "intern",
-            });
-          }
+          
+          const id = `intern-${intern.id}`;
+          newNotifications.push({
+            id,
+            title: "New Intern Registered",
+            message: `${intern.first_name} ${intern.last_name} ${intern.suffix || ""} has been registered successfully.`,
+            time: createdAt,
+            read: readStatus[id] || false,
+            type: "intern",
+          });
         });
       }
 
-      // Add new school notifications from today
+      // Add all recent school notifications
       if (schoolsRes.data.success && schoolsRes.data.data) {
         schoolsRes.data.data.forEach((school) => {
           if (!school.created_at) return;
           const createdAt = new Date(school.created_at);
           if (isNaN(createdAt.getTime())) return;
-          const isToday = createdAt.toISOString().split("T")[0] === today;
-          if (isToday) {
-            const id = `school-${school.id}`;
-            newNotifications.push({
-              id,
-              title: "New School Added",
-              message: `${school.school_name} has been added to the system.`,
-              time: createdAt,
-              read: readStatus[id] || false,
-              type: "school",
-            });
-          }
+          
+          const id = `school-${school.id}`;
+          newNotifications.push({
+            id,
+            title: "New School Added",
+            message: `${school.school_name} has been added to the system.`,
+            time: createdAt,
+            read: readStatus[id] || false,
+            type: "school",
+          });
         });
       }
 
-      // Add new course notifications from today
+      // Add all recent course notifications
       if (coursesRes.data.success && coursesRes.data.data) {
         coursesRes.data.data.forEach((course) => {
           if (!course.created_at) return;
           const createdAt = new Date(course.created_at);
           if (isNaN(createdAt.getTime())) return;
-          const isToday = createdAt.toISOString().split("T")[0] === today;
-          if (isToday) {
-            const id = `course-${course.id}`;
-            newNotifications.push({
-              id,
-              title: "New Course Added",
-              message: `${course.course_name} (${course.abbreviation || "N/A"}) has been added.`,
-              time: createdAt,
-              read: readStatus[id] || false,
-              type: "course",
-            });
-          }
+          
+          const id = `course-${course.id}`;
+          newNotifications.push({
+            id,
+            title: "New Course Added",
+            message: `${course.course_name} (${course.abbreviation || "N/A"}) has been added.`,
+            time: createdAt,
+            read: readStatus[id] || false,
+            type: "course",
+          });
         });
       }
 
-      // Add today's visitor notifications
+      // Add recent visitor notifications
       if (visitorsRes.data.success && visitorsRes.data.data) {
-        visitorsRes.data.data.forEach((visitor) => {
-          // Use stable ID based on visitor.id and time_in so read status persists
-          const timeKey = visitor.time_in
-            ? visitor.time_in.replace(/:/g, "")
-            : "";
+        // Take the latest visitors
+        visitorsRes.data.data.slice(0, 15).forEach((visitor) => {
+          const timeKey = visitor.time_in ? visitor.time_in.replace(/:/g, "") : "";
           const id = `visitor-${visitor.id}-${timeKey}`;
+          
+          // Get the local date part of the record
+          const recordDate = new Date(visitor.date || now);
+          const visitorDateStr = recordDate.toLocaleDateString("en-CA"); // YYYY-MM-DD local
+          
           newNotifications.push({
             id,
-            title: "New Visitor Today",
+            title: visitorDateStr === localToday ? "New Visitor Today" : "New Visitor Checked In",
             message: `${visitor.visitor_name || "A visitor"} checked in.`,
             time: visitor.time_in
-              ? new Date(`${today}T${visitor.time_in}`)
-              : new Date(),
+              ? new Date(`${visitorDateStr}T${visitor.time_in}`)
+              : recordDate,
             read: readStatus[id] || false,
             type: "visitor",
           });
@@ -209,15 +209,13 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
       // Check for new notifications to toast
       newNotifications.forEach((n) => {
         if (!toastedIdsRef.current.has(n.id)) {
-          // Trigger toast if unread and not initial load
           if (!n.read && !isInitialLoadRef.current) {
             toast(<NotificationToast notification={n} />, {
               onClick: () => {
                 setIsNotifOpen(true);
                 setHighlightedNotifId(n.id);
               },
-              className:
-                "backdrop-blur-xl bg-white/80 border border-white/50 shadow-2xl rounded-2xl p-0 overflow-hidden",
+              className: "backdrop-blur-xl bg-white/80 border border-white/50 shadow-2xl rounded-2xl p-0 overflow-hidden",
               bodyClassName: "p-4",
               icon: false,
             });
@@ -230,7 +228,8 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
         isInitialLoadRef.current = false;
       }
 
-      setNotifications(newNotifications.slice(0, 10));
+      // Show top 20 notifications across all types
+      setNotifications(newNotifications.slice(0, 20));
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
@@ -270,7 +269,7 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
         name: "Settings",
         icon: FaCog,
         submenu: [
-          { name: "Change Password", icon: FaKey, action: "changePassword" },
+          { name: "Manage Profile", icon: FaUser, action: "manageProfile" },
           {
             name: "Backup & Restore",
             icon: FaDatabase,
@@ -289,9 +288,9 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
 
   // Handle modal state for sidebar z-index
   useEffect(() => {
-    const anyModalOpen = isChangePasswordModalOpen || logoutConfirm;
+    const anyModalOpen = logoutConfirm || isProfileModalOpen;
     setIsModalOpen(anyModalOpen);
-  }, [isChangePasswordModalOpen, logoutConfirm, setIsModalOpen]);
+  }, [logoutConfirm, isProfileModalOpen, setIsModalOpen]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -456,19 +455,20 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
                                 </div>
                               )}
                             </div>
-                          ) : sub.action === "changePassword" ? (
-                            <button
-                              onClick={() => {
-                                setIsChangePasswordModalOpen(true);
-                                setOpenSubmenu({});
-                              }}
-                              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-[#188b3e]/10 w-full text-left"
-                            >
-                              <span>
-                                <sub.icon />
-                              </span>
-                              {sub.name}
-                            </button>
+                          ) : sub.action === "manageProfile" ? (
+                             <button
+                               onClick={() => {
+                                 setIsProfileModalOpen(true);
+                                 setOpenSubmenu({});
+                                 if (setMenuOpen) setMenuOpen(false); // for mobile
+                               }}
+                               className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-[#188b3e]/10 w-full text-left"
+                             >
+                               <span>
+                                 <sub.icon />
+                               </span>
+                               {sub.name}
+                             </button>
                           ) : (
                             <Link
                               to={sub.path}
@@ -584,20 +584,20 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
                                   </div>
                                 )}
                               </div>
-                            ) : sub.action === "changePassword" ? (
-                              <button
-                                onClick={() => {
-                                  setIsChangePasswordModalOpen(true);
-                                  setMenuOpen(false);
-                                  setOpenSubmenu({});
-                                }}
-                                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-[#188b3e]/10 w-full text-left"
-                              >
-                                <span>
-                                  <sub.icon />
-                                </span>
-                                {sub.name}
-                              </button>
+                            ) : sub.action === "manageProfile" ? (
+                             <button
+                               onClick={() => {
+                                 setIsProfileModalOpen(true);
+                                 setMenuOpen(false);
+                                 setOpenSubmenu({});
+                               }}
+                               className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-[#188b3e]/10 w-full text-left"
+                             >
+                               <span>
+                                 <sub.icon />
+                               </span>
+                               {sub.name}
+                             </button>
                             ) : (
                               <Link
                                 to={sub.path}
@@ -691,10 +691,9 @@ export default function Navbar({ activeMenu = "", setIsModalOpen }) {
         </button>
       </div>
 
-      <ChangePasswordModal
-        isOpen={isChangePasswordModalOpen}
-        onClose={() => setIsChangePasswordModalOpen(false)}
-        onSubmit={handlePasswordChange}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
 
       {/* Logout Confirmation Modal */}

@@ -7,6 +7,7 @@ import {
   FiFileText,
 } from "react-icons/fi";
 import Btn_X from "../Buttons/Btn_X.jsx";
+import { formatDate } from "../utility/dateFormatter.js";
 
 /**
  * ViewAttendanceModal - Modal for viewing all attendance records grouped by month
@@ -50,6 +51,8 @@ const ViewAttendanceModal = ({
       document.body.style.width = "";
       document.body.style.overflow = "";
       window.scrollTo(0, parseInt(scrollY || "0") * -1);
+      setExpandedMonths({});
+      setExpandedDates({});
     }
 
     return () => {
@@ -67,10 +70,8 @@ const ViewAttendanceModal = ({
   // Parse date as local time (avoids UTC timezone shift issues)
   const parseLocalDate = (dateStr) => {
     if (!dateStr) return null;
-    // Handle ISO format like "2026-04-07T08:24:08.000Z" by extracting date portion
-    const datePart = dateStr.split("T")[0];
-    const [year, month, day] = datePart.split("-").map(Number);
-    return new Date(year, month - 1, day);
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? null : date;
   };
 
   // Group records by month
@@ -301,27 +302,7 @@ const ViewAttendanceModal = ({
                               <div className="flex items-center gap-2">
                                 <FiClock className="w-4 h-4 text-gray-400" />
                                 <span className="font-medium text-gray-800">
-                                  {(() => {
-                                    try {
-                                      const datePart =
-                                        record.date.split("T")[0];
-                                      const [year, month, day] = datePart
-                                        .split("-")
-                                        .map(Number);
-                                      if (!year || !month || !day)
-                                        return "Invalid Date";
-                                      const d = new Date(year, month - 1, day);
-                                      if (isNaN(d.getTime()))
-                                        return "Invalid Date";
-                                      return d.toLocaleDateString("en-US", {
-                                        weekday: "long",
-                                        month: "short",
-                                        day: "numeric",
-                                      });
-                                    } catch (e) {
-                                      return "Invalid Date";
-                                    }
-                                  })()}
+                                  {formatDate(record.date)}
                                 </span>
                               </div>
                               {isDateExpanded ? (

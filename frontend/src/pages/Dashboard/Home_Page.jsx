@@ -139,6 +139,7 @@ export default function Home_Page() {
   const [certificateVisitorData, setCertificateVisitorData] = useState(null);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   const [isResetLoading, setIsResetLoading] = useState(false);
+  const [isExportLoading, setIsExportLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCourseViewOpen, setIsCourseViewOpen] = useState(false);
   const [isInternAttendanceModalOpen, setIsInternAttendanceModalOpen] =
@@ -202,6 +203,62 @@ export default function Home_Page() {
 
   useEffect(() => {
     fetchAttendanceData();
+  }, []);
+
+  // Listen for attendance-recorded event to update counters
+  useEffect(() => {
+    const handleAttendanceRecorded = () => {
+      fetchTodayCounts();
+      fetchAttendanceData(false); // Refresh all data including weekly/monthly/yearly stats
+    };
+    window.addEventListener("attendance-recorded", handleAttendanceRecorded);
+    return () => {
+      window.removeEventListener(
+        "attendance-recorded",
+        handleAttendanceRecorded,
+      );
+    };
+  }, []);
+
+  // Listen for storage changes (when attendance is recorded from another page/modal)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === "attendanceUpdated") {
+        fetchTodayCounts();
+        fetchAttendanceData(false);
+        localStorage.removeItem("attendanceUpdated");
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
+  // Refresh data when page becomes visible (user returns from attendance modal)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        // Check if attendance was updated while away
+        const lastUpdate = localStorage.getItem("attendanceUpdated");
+        if (lastUpdate) {
+          fetchTodayCounts();
+          fetchAttendanceData(false);
+          localStorage.removeItem("attendanceUpdated");
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    // Check on mount as well
+    const lastUpdate = localStorage.getItem("attendanceUpdated");
+    if (lastUpdate) {
+      fetchTodayCounts();
+      fetchAttendanceData(false);
+      localStorage.removeItem("attendanceUpdated");
+    }
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -377,6 +434,10 @@ export default function Home_Page() {
             );
           }
           toast.success("Attendance record deleted successfully");
+          // Set flag to update counters on homepage
+          localStorage.setItem("attendanceUpdated", Date.now().toString());
+          // Dispatch event to update counters immediately
+          window.dispatchEvent(new CustomEvent("attendance-recorded"));
         }
       }
     } catch (err) {
@@ -447,6 +508,10 @@ export default function Home_Page() {
       setInternAttendance([]);
       setVisitorAttendance([]);
       toast.success("All attendance records have been reset");
+      // Set flag to update counters on homepage
+      localStorage.setItem("attendanceUpdated", Date.now().toString());
+      // Dispatch event to update counters immediately
+      window.dispatchEvent(new CustomEvent("attendance-recorded"));
     } catch (err) {
       console.error("Error clearing attendance data:", err);
       toast.error("Failed to reset attendance records");
@@ -608,7 +673,9 @@ export default function Home_Page() {
   };
 
   const handleExportConfirm = async (filename) => {
-    const workbook = new ExcelJS.Workbook();
+    setIsExportLoading(true);
+    try {
+      const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Attendance");
     worksheet.columns = [
       { header: "ID", key: "id", width: 10 },
@@ -671,6 +738,13 @@ export default function Home_Page() {
     });
     saveAs(blob, `${filename}.xlsx`);
     toast.success("Attendance data exported successfully");
+    setIsExportModalOpen(false);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export attendance data");
+    } finally {
+      setIsExportLoading(false);
+    }
   };
 
   const internColumns = [
@@ -1035,22 +1109,19 @@ export default function Home_Page() {
                 <Button
                   label="Refresh"
                   onClick={handleVisitorRefresh}
-                  icon={
-                    isRefreshing ? (
-                      <FiLoader className="w-3 h-3 sm:w-4 sm:h-4 animate-spin text-blue-600" />
-                    ) : (
-                      <FiRefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
-                    )
-                  }
+                  isLoading={isRefreshing}
                   variant="secondary"
                   size="sm"
                   disabled={isRefreshing}
                   title="Refresh"
+                  loadingText="Refreshing..."
                   hideLabelOnSmall
                 />
                 <Button
                   label="Export"
                   onClick={handleExport}
+                  isLoading={isExportLoading}
+                  loadingText="Exporting..."
                   icon={<FiDownload className="w-3 h-3 sm:w-4 sm:h-4" />}
                   variant="modal-primary"
                   size="sm"
@@ -1114,7 +1185,7 @@ export default function Home_Page() {
         itemName="Visitor Attendance"
         fields={[
           { name: "name", label: "Name" },
-          { name: "date", label: "Date" },
+          { name: "displayDate", label: "Date" },
           { name: "timeIn", label: "Time In" },
           { name: "purpose", label: "Purpose" },
           { name: "address", label: "Address" },
@@ -1125,6 +1196,7 @@ export default function Home_Page() {
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
         onConfirm={handleExportConfirm}
+        isLoading={isExportLoading}
         defaultName={`attendance_${new Date().toISOString().split("T")[0]}`}
         itemName="Attendance Data"
       />

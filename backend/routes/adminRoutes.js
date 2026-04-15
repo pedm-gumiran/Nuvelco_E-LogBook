@@ -25,4 +25,8 @@ router.delete('/:id', adminController.deleteAdmin);
 /* RESET PASSWORD */
 router.post('/reset-password', adminController.resetPassword);
 
+/* ADMIN PROFILE */
+router.get('/profile/:id', adminController.getAdminProfile);
+router.put('/profile/:id', adminController.updateAdminProfile);
+
 module.exports = router;
