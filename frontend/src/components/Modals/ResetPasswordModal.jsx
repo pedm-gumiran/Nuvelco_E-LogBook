@@ -163,6 +163,7 @@ const ResetPasswordModal = ({ isOpen, onClose, onSwitchToLogin, username }) => {
               onChange={handleChange}
               placeholder="Enter new password"
               required
+              disabled={isSubmitting}
             />
 
             <Input_Password
@@ -172,6 +173,7 @@ const ResetPasswordModal = ({ isOpen, onClose, onSwitchToLogin, username }) => {
               onChange={handleChange}
               placeholder="Confirm new password"
               required
+              disabled={isSubmitting}
             />
 
             {error && (

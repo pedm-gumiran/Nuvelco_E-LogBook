@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { FiUser, FiSave, FiX, FiLoader } from "react-icons/fi";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { FiUser, FiX, FiLoader, FiAlertTriangle } from "react-icons/fi";
 import { toast } from "react-toastify";
 import axios from "../../api/axios.js";
 import { useUser } from "../context/UserContext";
 import Input_Text from "../Input_Fields/Input_Text.jsx";
 import Input_Password from "../Input_Fields/Input_Password.jsx";
+import Button from "../Buttons/Button.jsx";
+import historyManager from "../../utils/historyManager.js";
 
 const ProfileModal = ({ isOpen, onClose }) => {
   const { user, setUser } = useUser();
+  const navigate = useNavigate();
+  const originalDataRef = useRef({});
 
   // Disable body scroll when modal is open
   useEffect(() => {
@@ -61,13 +66,15 @@ const ProfileModal = ({ isOpen, onClose }) => {
           const response = await axios.get(`/admin/profile/${user.id}`);
           if (response.data.success) {
             const data = response.data.data;
-            setFormData({
+            const initialData = {
               first_name: data.first_name || "",
               last_name: data.last_name || "",
               username: data.username || "",
-              password: "", // Don't pre-fill password for security
-              pin_code: "", // Don't pre-fill pin code for security
-            });
+              password: "",
+              pin_code: "",
+            };
+            originalDataRef.current = initialData;
+            setFormData(initialData);
           }
         } catch (error) {
           console.error("Error fetching profile:", error);
@@ -86,6 +93,19 @@ const ProfileModal = ({ isOpen, onClose }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Check if any value has been modified
+  const isModified =
+    formData.first_name !== (originalDataRef.current.first_name || "") ||
+    formData.last_name !== (originalDataRef.current.last_name || "") ||
+    formData.username !== (originalDataRef.current.username || "") ||
+    formData.password.trim() !== "" ||
+    formData.pin_code.trim() !== "";
+
+  // Check if credentials (username or password) were changed
+  const isCredentialChanged =
+    formData.username !== (originalDataRef.current.username || "") ||
+    formData.password.trim() !== "";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user?.id) return;
@@ -94,17 +114,33 @@ const ProfileModal = ({ isOpen, onClose }) => {
     try {
       const response = await axios.put(`/admin/profile/${user.id}`, formData);
       if (response.data.success) {
-        toast.success("Profile updated successfully");
-        // Update user context with new name/username
-        const updatedUser = {
-          ...user,
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          username: formData.username,
-        };
-        setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        onClose();
+        // If username or password was changed, auto-logout
+        if (isCredentialChanged) {
+          toast.success(
+            "Profile updated successfully. Logging out for security..."
+          );
+
+          // Short delay to let the user see the toast before logout
+          setTimeout(() => {
+            localStorage.removeItem("user");
+            setUser(null);
+            onClose();
+            historyManager.handleLogout("/");
+            navigate("/");
+          }, 1500);
+        } else {
+          toast.success("Profile updated successfully");
+          // Update user context with new name
+          const updatedUser = {
+            ...user,
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            username: formData.username,
+          };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          onClose();
+        }
       }
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -118,7 +154,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#188b3e] to-[#147a35] px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -136,14 +172,14 @@ const ProfileModal = ({ isOpen, onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6 flex-1 min-h-0 overflow-y-auto">
           {fetching ? (
             <div className="flex flex-col items-center justify-center py-12">
               <FiLoader className="w-10 h-10 text-[#188b3e] animate-spin mb-4" />
               <p className="text-gray-500 font-medium">Loading profile...</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form id="profile-form" onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* First Name */}
                 <Input_Text
@@ -152,6 +188,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   value={formData.first_name}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                   placeholder="First name"
                 />
 
@@ -162,6 +199,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   value={formData.last_name}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                   placeholder="Last name"
                 />
               </div>
@@ -173,6 +211,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                 value={formData.username}
                 onChange={handleChange}
                 required
+                disabled={loading}
                 placeholder="Enter username"
               />
 
@@ -183,6 +222,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
+                  disabled={loading}
                   placeholder="Enter new password (optional)"
                 />
                 <p className="text-[10px] text-gray-400 italic ml-1">
@@ -200,6 +240,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                   onChange={(e) => {
                     if (e.target.value.length <= 6) handleChange(e);
                   }}
+                  disabled={loading}
                   placeholder="Enter new 6-digit pin (optional)"
                 />
                 <p className="text-[10px] text-gray-400 italic ml-1">
@@ -207,31 +248,46 @@ const ProfileModal = ({ isOpen, onClose }) => {
                 </p>
               </div>
 
-              {/* Actions */}
-              <div className="pt-4 flex gap-3">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-[2] px-4 py-2.5 bg-[#188b3e] hover:bg-[#147a35] text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#188b3e]/20 disabled:opacity-70"
-                >
-                  {loading ? (
-                    <FiLoader className="animate-spin w-5 h-5" />
-                  ) : (
-                    <FiSave className="w-5 h-5" />
-                  )}
-                  Save Changes
-                </button>
+
+              {/* Security Note */}
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
+                <FiAlertTriangle className="text-amber-500 w-4 h-4 flex-shrink-0 mt-0.5" />
+                <p className="text-[11px] text-amber-700 leading-relaxed">
+                  <span className="font-semibold">Note:</span> Changing your
+                  username or password will automatically log you out for
+                  security purposes. You will need to log in again with your
+                  new credentials.
+                </p>
               </div>
             </form>
           )}
         </div>
+
+        {/* Footer */}
+        {!fetching && (
+          <div className="px-6 py-4 bg-gray-50 shrink-0 rounded-b-2xl border-t border-gray-200">
+            <div className="flex items-center justify-end gap-3">
+              <div>
+                <Button
+                  variant="modal-secondary"
+                  onClick={onClose}
+                  label="Cancel"
+                />
+              </div>
+              <div>
+                <Button
+                  variant="modal-primary"
+                  type="submit"
+                  form="profile-form"
+                  label="Save Changes"
+                  disabled={!isModified}
+                  isLoading={loading}
+                  loadingText="Saving..."
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

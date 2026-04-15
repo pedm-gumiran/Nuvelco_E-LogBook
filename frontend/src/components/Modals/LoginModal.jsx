@@ -223,6 +223,7 @@ const LoginModal = ({ isOpen, onClose }) => {
                 onChange={handleChange}
                 placeholder="Enter your username"
                 required
+                disabled={isLoading}
               />
 
               <Input_Password
@@ -232,6 +233,7 @@ const LoginModal = ({ isOpen, onClose }) => {
                 onChange={handleChange}
                 placeholder="••••••••••••"
                 required
+                disabled={isLoading}
               />
 
               <div className="flex justify-between items-center">

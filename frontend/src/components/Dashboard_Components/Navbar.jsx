@@ -47,17 +47,6 @@ const NotificationToast = ({ notification }) => {
 
   return (
     <div className="flex flex-col w-full">
-      <div className="flex items-center justify-between mb-2 opacity-60">
-        <div className="flex items-center gap-2">
-          <div className="bg-[#188b3e] p-1 rounded-md">
-            <Client_Logo size={12} />
-          </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-            NUVELCO
-          </span>
-        </div>
-        <span className="text-[10px] font-bold text-gray-400">now</span>
-      </div>
       <div className="flex items-start gap-3">
         <div className="bg-gray-50 p-2.5 rounded-2xl shadow-inner border border-gray-100 flex-shrink-0">
           <div className="text-xl">{getIcon()}</div>

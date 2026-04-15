@@ -9,6 +9,7 @@ export default function Button({
   className = "",
   icon = null,
   title,
+  form,
   isLoading = false,
   loadingText = "Loading...",
   variant = "primary", // 'primary', 'secondary', 'modal-primary', 'modal-secondary', 'custom'
@@ -96,6 +97,7 @@ export default function Button({
       aria-busy={isLoading}
       className={buttonClasses}
       title={title}
+      form={form}
       style={variant === "custom" ? { backgroundColor: customColor } : {}}
     >
       {/* Show spinner if loading */}

@@ -167,7 +167,7 @@ const EditModal = ({
                 label: typeof opt === "object" ? opt.label : opt,
               }))}
               placeholder={`Select ${label || name}...`}
-              disabled={disabled}
+              disabled={isLoading || disabled}
               required={required}
               className={errors[name] ? "border-red-500" : ""}
             />
@@ -187,7 +187,7 @@ const EditModal = ({
               value={value}
               onChange={handleChange}
               placeholder={placeholder || `Enter ${label || name}...`}
-              disabled={disabled}
+              disabled={isLoading || disabled}
               required={required}
               rows={4}
               resize="none"
@@ -208,7 +208,7 @@ const EditModal = ({
               value={value}
               onChange={handleChange}
               placeholder={placeholder || `Enter ${label || name}...`}
-              disabled={disabled}
+              disabled={isLoading || disabled}
               required={required}
               password_className={errors[name] ? "border-red-500" : ""}
             />
@@ -230,8 +230,8 @@ const EditModal = ({
               onChange={handleChange}
               placeholder={placeholder || `Enter ${label || name}...`}
               required={required}
-              disabled={disabled}
-              text_ClassName={`${errors[name] ? "border-red-500" : ""} ${disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
+              disabled={isLoading || disabled}
+              text_ClassName={`${errors[name] ? "border-red-500" : ""} ${isLoading || disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
             />
             {errors[name] && (
               <span className="text-xs text-red-500">{errors[name]}</span>

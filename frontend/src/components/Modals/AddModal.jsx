@@ -213,7 +213,7 @@ const AddModal = ({
                           label: typeof opt === "object" ? opt.label : opt,
                         }))}
                         placeholder={`Select ${field.label || name}...`}
-                        disabled={disabled}
+                        disabled={isLoading || disabled}
                         required={required}
                         className={errors[name] ? "border-red-500" : ""}
                       />
@@ -238,7 +238,7 @@ const AddModal = ({
                         placeholder={
                           placeholder || `Enter ${field.label || name}...`
                         }
-                        disabled={disabled}
+                        disabled={isLoading || disabled}
                         required={required}
                         rows={4}
                         resize="none"
@@ -264,7 +264,7 @@ const AddModal = ({
                         placeholder={
                           placeholder || `Enter ${field.label || name}...`
                         }
-                        disabled={disabled}
+                        disabled={isLoading || disabled}
                         required={required}
                         password_className={
                           errors[name] ? "border-red-500" : ""
@@ -292,8 +292,8 @@ const AddModal = ({
                         placeholder || `Enter ${field.label || name}...`
                       }
                       required={required}
-                      disabled={disabled}
-                      text_ClassName={`${errors[name] ? "border-red-500" : ""} ${disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
+                      disabled={isLoading || disabled}
+                      text_ClassName={`${errors[name] ? "border-red-500" : ""} ${isLoading || disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
                     />
                     {errors[name] && (
                       <span className="text-xs text-red-500">

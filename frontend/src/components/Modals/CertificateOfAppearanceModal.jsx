@@ -14,6 +14,9 @@ import {
 } from "react-icons/fi";
 import Button from "../Buttons/Button.jsx";
 
+const DEFAULT_SIGNATORY_NAME = "FREDEL L. SALVADOR,JD,PhD";
+const DEFAULT_SIGNATORY_POSITION = "General Manager";
+
 /**
  * CertificateOfAppearanceModal - Modal for generating Certificate of Appearance
  *
@@ -38,8 +41,8 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
     projectSite: "",
     issuedDate: "",
     issuedLocation: "Gabut, Dupax del Sur, Nueva Vizcaya",
-    signatoryName: "FREDEL L. SALVADOR,JD,PhD",
-    signatoryPosition: "General Manager",
+    signatoryName: DEFAULT_SIGNATORY_NAME,
+    signatoryPosition: DEFAULT_SIGNATORY_POSITION,
     // Template 2, 3, 4 specific fields
     startDate: "",
     endDate: "",
@@ -86,13 +89,25 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
         ...certData,
         signatureImage: "/signature.png",
         showSignature: true,
-        requestorName: visitorData.name || "",
-        projectSite: visitorData.address || "",
+        requestorName:
+          visitorData.name && visitorData.name !== "--" ? visitorData.name : "",
+        projectSite:
+          visitorData.address && visitorData.address !== "--"
+            ? visitorData.address
+            : "",
         issuedDate: formattedDate,
-        startDate: visitorData.displayDate || formattedDate,
-        endDate: visitorData.displayDate || formattedDate,
+        startDate:
+          visitorData.displayDate && visitorData.displayDate !== "--"
+            ? visitorData.displayDate
+            : formattedDate,
+        endDate:
+          visitorData.displayDate && visitorData.displayDate !== "--"
+            ? visitorData.displayDate
+            : formattedDate,
         company:
-          visitorData.company || "Providers Multipurpose Cooperative (PMPC)",
+          visitorData.companyName && visitorData.companyName !== "--"
+            ? visitorData.companyName
+            : "Providers Multipurpose Cooperative (PMPC)",
         activity: "participant on the Bench Marking Activity",
       });
     }
@@ -293,6 +308,20 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
     }
   };
 
+  const handleResetSignatoryName = () => {
+    setCertData((prev) => ({
+      ...prev,
+      signatoryName: DEFAULT_SIGNATORY_NAME,
+    }));
+  };
+
+  const handleResetSignatoryPosition = () => {
+    setCertData((prev) => ({
+      ...prev,
+      signatoryPosition: DEFAULT_SIGNATORY_POSITION,
+    }));
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -336,7 +365,7 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
         {/* Content Area */}
         <div className="flex-1 flex overflow-hidden">
           {/* Controls Panel (Left) */}
-          <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto p-6 hidden lg:block shrink-0">
+          <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto p-6 hidden lg:block shrink-0 scrollbar-thin">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
               <FiEdit3 /> Edit Details
             </h3>
@@ -349,7 +378,8 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                 <select
                   value={selectedTemplate}
                   onChange={(e) => setSelectedTemplate(e.target.value)}
-                  className="w-full px-3 py-2 border border-blue-200 bg-blue-50/30 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none font-medium text-blue-900"
+                  disabled={isGenerating}
+                  className="w-full px-3 py-2 border border-blue-200 bg-blue-50/30 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none font-medium text-blue-900 disabled:opacity-70"
                 >
                   {templates.map((t) => (
                     <option key={t.value} value={t.value}>
@@ -371,7 +401,8 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                   onChange={(e) =>
                     setCertData({ ...certData, requestorName: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none"
+                  disabled={isGenerating}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none disabled:bg-gray-50"
                 />
               </div>
 
@@ -387,7 +418,8 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                       onChange={(e) =>
                         setCertData({ ...certData, position: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none"
+                      disabled={isGenerating}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none disabled:bg-gray-50"
                     />
                   </div>
                   <div>
@@ -400,7 +432,8 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                       onChange={(e) =>
                         setCertData({ ...certData, department: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none"
+                      disabled={isGenerating}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none disabled:bg-gray-50"
                     />
                   </div>
                   <div>
@@ -413,7 +446,8 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                       onChange={(e) =>
                         setCertData({ ...certData, company: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none"
+                      disabled={isGenerating}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none disabled:bg-gray-50"
                     />
                   </div>
                   <div>
@@ -428,7 +462,8 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                           projectSite: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none resize-none"
+                      disabled={isGenerating}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none resize-none disabled:bg-gray-50"
                       rows={2}
                     />
                   </div>
@@ -445,7 +480,8 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                       onChange={(e) =>
                         setCertData({ ...certData, company: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none"
+                      disabled={isGenerating}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none disabled:bg-gray-50"
                     />
                   </div>
                   <div>
@@ -458,7 +494,8 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                       onChange={(e) =>
                         setCertData({ ...certData, startDate: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none"
+                      disabled={isGenerating}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none disabled:bg-gray-50"
                       placeholder={
                         selectedTemplate === "template4"
                           ? "Leave blank for manual line"
@@ -476,7 +513,8 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                       onChange={(e) =>
                         setCertData({ ...certData, endDate: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none"
+                      disabled={isGenerating}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none disabled:bg-gray-50"
                       placeholder={
                         selectedTemplate === "template4"
                           ? "Leave blank for manual line"
@@ -493,7 +531,8 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                       onChange={(e) =>
                         setCertData({ ...certData, activity: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none resize-none"
+                      disabled={isGenerating}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none resize-none disabled:bg-gray-50"
                       rows={2}
                     />
                   </div>
@@ -510,7 +549,8 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                   onChange={(e) =>
                     setCertData({ ...certData, issuedDate: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none"
+                  disabled={isGenerating}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none disabled:bg-gray-50"
                 />
               </div>
             </div>
@@ -533,7 +573,8 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                         showSignature: e.target.checked,
                       })
                     }
-                    className="accent-[#188b3e]"
+                    disabled={isGenerating}
+                    className="accent-[#188b3e] disabled:opacity-50"
                   />
                 </label>
               </div>
@@ -571,25 +612,52 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                 </div>
               </div>
 
-              <input
-                type="text"
-                value={certData.signatoryName}
-                onChange={(e) =>
-                  setCertData({ ...certData, signatoryName: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#188b3e] outline-none shadow-sm"
-              />
-              <input
-                type="text"
-                value={certData.signatoryPosition}
-                onChange={(e) =>
-                  setCertData({
-                    ...certData,
-                    signatoryPosition: e.target.value,
-                  })
-                }
-                className="w-full mt-2 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none shadow-sm"
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={certData.signatoryName}
+                  onChange={(e) =>
+                    setCertData({ ...certData, signatoryName: e.target.value })
+                  }
+                  disabled={isGenerating}
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold focus:ring-2 focus:ring-[#188b3e] outline-none shadow-sm disabled:bg-gray-50"
+                />
+                {certData.signatoryName !== DEFAULT_SIGNATORY_NAME && (
+                  <button
+                    onClick={handleResetSignatoryName}
+                    className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors shrink-0"
+                    title="Restore Default Name"
+                    disabled={isGenerating}
+                  >
+                    <FiRotateCcw size={16} />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="text"
+                  value={certData.signatoryPosition}
+                  onChange={(e) =>
+                    setCertData({
+                      ...certData,
+                      signatoryPosition: e.target.value,
+                    })
+                  }
+                  disabled={isGenerating}
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none shadow-sm disabled:bg-gray-50"
+                />
+                {certData.signatoryPosition !== DEFAULT_SIGNATORY_POSITION && (
+                  <button
+                    onClick={handleResetSignatoryPosition}
+                    className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors shrink-0"
+                    title="Restore Default Position"
+                    disabled={isGenerating}
+                  >
+                    <FiRotateCcw size={16} />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -965,11 +1033,22 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
         }
         .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
         
-        /* Thin scrollbar for preview */
-        .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
-        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* Thin scrollbar for panels */
+        .scrollbar-thin::-webkit-scrollbar { 
+          width: 6px !important; 
+          height: 6px !important; 
+          display: block !important; 
+        }
+        .scrollbar-thin::-webkit-scrollbar-track { 
+          background: transparent !important; 
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb { 
+          background: #cbd5e1 !important; 
+          border-radius: 10px !important; 
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover { 
+          background: #94a3b8 !important; 
+        }
       `}</style>
     </div>
   );

@@ -1,7 +1,14 @@
 const pool = require("../config/db");
 
-// Tables to backup/restore
-const TABLES = ["admin", "intern", "intern_attendance", "visitor_attendance"];
+// Tables to backup/restore (order matters - parent tables before child tables)
+const TABLES = [
+  "admin",
+  "school",
+  "course",
+  "intern",
+  "intern_attendance",
+  "visitor_attendance",
+];
 
 // Helper to convert values to MySQL format
 const formatValueForMySQL = (value) => {
@@ -107,6 +114,9 @@ const backupController = {
       // Start transaction
       await connection.beginTransaction();
 
+      // Disable foreign key checks to allow restoring data with missing parent tables
+      await connection.query("SET FOREIGN_KEY_CHECKS = 0");
+
       // Restore each table
       for (const table of TABLES) {
         if (backupData[table] && Array.isArray(backupData[table])) {
@@ -136,6 +146,9 @@ const backupController = {
         }
       }
 
+      // Re-enable foreign key checks after restore
+      await connection.query("SET FOREIGN_KEY_CHECKS = 1");
+
       await connection.commit();
 
       res.status(200).json({
@@ -145,6 +158,8 @@ const backupController = {
       });
     } catch (error) {
       await connection.rollback();
+      // Re-enable foreign key checks even on error
+      await connection.query("SET FOREIGN_KEY_CHECKS = 1");
       console.error("Restore error:", error);
       res.status(500).json({
         success: false,

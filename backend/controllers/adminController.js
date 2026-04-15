@@ -1,4 +1,5 @@
 const User = require("../models/adminModel");
+const bcrypt = require("bcryptjs");
 
 exports.getAdmin = async (req, res) => {
   try {
@@ -64,7 +65,9 @@ exports.loginAdmin = async (req, res) => {
       });
     }
 
-    if (admin.password !== password) {
+    // Verify password
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
       return res
         .status(401)
         .json({ success: false, message: "Invalid credentials" });
@@ -107,12 +110,16 @@ exports.registerAdmin = async (req, res) => {
       });
     }
 
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     // Create admin account
     const adminId = await User.createAdmin(
       first_name,
       last_name,
       username,
-      password,
+      hashedPassword,
       pin_code,
     );
 
@@ -204,9 +211,13 @@ exports.resetPassword = async (req, res) => {
         .json({ success: false, message: "Invalid credentials" });
     }
 
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
     const affectedRows = await User.updatePasswordByUsername(
       username,
-      newPassword,
+      hashedPassword,
     );
 
     if (affectedRows === 0) {
@@ -259,7 +270,11 @@ exports.updateAdminProfile = async (req, res) => {
     }
 
     // Use new values if provided, otherwise keep existing
-    const finalPassword = password || currentAdmin.password;
+    let finalPassword = currentAdmin.password;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      finalPassword = await bcrypt.hash(password, salt);
+    }
     const finalPinCode = pin_code || currentAdmin.pin_code;
 
     await User.updateAdmin(

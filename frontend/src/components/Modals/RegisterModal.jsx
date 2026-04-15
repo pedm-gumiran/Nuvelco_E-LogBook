@@ -150,6 +150,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                 onChange={handleChange}
                 placeholder="First name"
                 required
+                disabled={isLoading}
               />
 
               <Input_Text
@@ -159,6 +160,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                 onChange={handleChange}
                 placeholder="Last name"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -170,6 +172,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
               onChange={handleChange}
               placeholder="Create a username"
               required
+              disabled={isLoading}
             />
 
             <div className="grid grid-cols-1 gap-3">
@@ -180,6 +183,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                 onChange={handleChange}
                 placeholder="New password"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -196,6 +200,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
                       onChange={handleChange}
                       placeholder="6-digit PIN"
                       required
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="relative group">

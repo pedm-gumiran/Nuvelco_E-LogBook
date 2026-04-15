@@ -132,6 +132,7 @@ const ForgotPasswordModal = ({
             onChange={handleChange}
             placeholder="Enter your username"
             required
+            disabled={isVerifying}
           />
 
           <Input_Text
@@ -143,6 +144,7 @@ const ForgotPasswordModal = ({
             onChange={handleChange}
             placeholder="Enter 6-digit PIN"
             required
+            disabled={isVerifying}
           />
 
           {error && (
