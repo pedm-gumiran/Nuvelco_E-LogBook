@@ -26,13 +26,13 @@
       "main.js",
       "backend/**/*",
       "frontend/dist/**/*",
-      "frontend/public/system_logo_electron.png",
+      "frontend/public/client_logo.png",
       "package.json",
       "backend/.env"
     ],
-    "icon": "frontend/public/system_logo_electron.png",
+    "icon": "frontend/public/client_logo.png",
     "win": {
-      "icon": "frontend/public/system_logo_electron.png",
+      "icon": "frontend/public/client_logo.png",
       "target": "nsis"
     }
   },
