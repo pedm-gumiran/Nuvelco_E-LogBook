@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FiUsers,
   FiUserPlus,
@@ -152,7 +152,7 @@ export default function Home_Page() {
     return () => clearInterval(timer);
   }, []);
 
-  const fetchTodayCounts = async () => {
+  const fetchTodayCounts = useCallback(async () => {
     try {
       const [internCountRes, visitorCountRes] = await Promise.all([
         axios.get("/intern-attendance/today-count"),
@@ -167,49 +167,67 @@ export default function Home_Page() {
     } catch (err) {
       console.error("Error fetching today counts:", err);
     }
-  };
+  }, []);
 
-  const fetchAttendanceData = async (showLoading = true) => {
-    if (showLoading) {
-      setLoading(true);
-    } else {
-      setIsRefreshing(true);
-    }
-    setError(null);
-    try {
-      const internResponse = await axios.get("/intern-attendance");
-      if (internResponse.data.success) {
-        setInternAttendance(internResponse.data.data);
-      }
-      const visitorResponse = await axios.get("/visitor-attendance");
-      if (visitorResponse.data.success) {
-        setVisitorAttendance(visitorResponse.data.data);
-      }
-      await fetchTodayCounts();
-    } catch (err) {
-      console.error("Error fetching attendance data:", err);
-      setError("Failed to load attendance data");
-      if (!showLoading) {
-        toast.error("Failed to refresh data");
-      }
-    } finally {
+  const fetchAttendanceData = useCallback(
+    async (showLoading = true) => {
       if (showLoading) {
-        setLoading(false);
+        setLoading(true);
       } else {
-        setIsRefreshing(false);
+        setIsRefreshing(true);
       }
-    }
-  };
+      setError(null);
+      try {
+        // Cache-busting timestamp to ensure fresh data
+        const timestamp = Date.now();
+        const internResponse = await axios.get(
+          `/intern-attendance?_t=${timestamp}`,
+        );
+        if (internResponse.data.success) {
+          setInternAttendance(internResponse.data.data);
+        }
+        const visitorResponse = await axios.get(
+          `/visitor-attendance?_t=${timestamp}`,
+        );
+        if (visitorResponse.data.success) {
+          console.log(
+            "Visitor data refreshed:",
+            visitorResponse.data.data.length,
+            "records",
+          );
+          setVisitorAttendance(visitorResponse.data.data);
+        }
+        await fetchTodayCounts();
+      } catch (err) {
+        console.error("Error fetching attendance data:", err);
+        setError("Failed to load attendance data");
+        if (!showLoading) {
+          toast.error("Failed to refresh data");
+        }
+      } finally {
+        if (showLoading) {
+          setLoading(false);
+        } else {
+          setIsRefreshing(false);
+        }
+      }
+    },
+    [fetchTodayCounts],
+  );
 
   useEffect(() => {
     fetchAttendanceData();
   }, []);
 
-  // Listen for attendance-recorded event to update counters
+  // Listen for attendance-recorded event to update counters and refresh tables
   useEffect(() => {
     const handleAttendanceRecorded = () => {
+      console.log("Attendance recorded event received - refreshing data");
       fetchTodayCounts();
-      fetchAttendanceData(false); // Refresh all data including weekly/monthly/yearly stats
+      // Small delay to ensure database has finished writing
+      setTimeout(() => {
+        fetchAttendanceData(false); // Refresh all data including weekly/monthly/yearly stats
+      }, 500);
     };
     window.addEventListener("attendance-recorded", handleAttendanceRecorded);
     return () => {
@@ -218,7 +236,7 @@ export default function Home_Page() {
         handleAttendanceRecorded,
       );
     };
-  }, []);
+  }, [fetchTodayCounts, fetchAttendanceData]);
 
   // Listen for storage changes (when attendance is recorded from another page/modal)
   useEffect(() => {
@@ -676,69 +694,69 @@ export default function Home_Page() {
     setIsExportLoading(true);
     try {
       const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Attendance");
-    worksheet.columns = [
-      { header: "ID", key: "id", width: 10 },
-      { header: "Name", key: "name", width: 25 },
-      { header: "School", key: "school", width: 25 },
-      { header: "Course", key: "course", width: 25 },
-      { header: "Date", key: "date", width: 15 },
-      { header: "AM In", key: "amIn", width: 15 },
-      { header: "AM Out", key: "amOut", width: 15 },
-      { header: "PM In", key: "pmIn", width: 15 },
-      { header: "PM Out", key: "pmOut", width: 15 },
-      { header: "Time In", key: "timeIn", width: 15 },
-      { header: "Time Out", key: "timeOut", width: 15 },
-      { header: "Purpose", key: "purpose", width: 25 },
-      { header: "Address", key: "address", width: 25 },
-    ];
-    worksheet.getRow(1).eachCell((cell) => {
-      cell.font = { bold: true };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFE0E0E0" },
-      };
-    });
-    filteredInternData.forEach((row) => {
-      worksheet.addRow({
-        id: row.id,
-        name: row.name,
-        school: row.school,
-        course: row.course,
-        date: row.date,
-        amIn: row.amIn,
-        amOut: row.amOut,
-        pmIn: row.pmIn,
-        pmOut: row.pmOut,
-        timeIn: "",
-        timeOut: "",
-        purpose: "",
-        address: "",
+      const worksheet = workbook.addWorksheet("Attendance");
+      worksheet.columns = [
+        { header: "ID", key: "id", width: 10 },
+        { header: "Name", key: "name", width: 25 },
+        { header: "School", key: "school", width: 25 },
+        { header: "Course", key: "course", width: 25 },
+        { header: "Date", key: "date", width: 15 },
+        { header: "AM In", key: "amIn", width: 15 },
+        { header: "AM Out", key: "amOut", width: 15 },
+        { header: "PM In", key: "pmIn", width: 15 },
+        { header: "PM Out", key: "pmOut", width: 15 },
+        { header: "Time In", key: "timeIn", width: 15 },
+        { header: "Time Out", key: "timeOut", width: 15 },
+        { header: "Purpose", key: "purpose", width: 25 },
+        { header: "Address", key: "address", width: 25 },
+      ];
+      worksheet.getRow(1).eachCell((cell) => {
+        cell.font = { bold: true };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFE0E0E0" },
+        };
       });
-    });
-    filteredVisitorData.forEach((row) => {
-      worksheet.addRow({
-        id: row.id,
-        name: row.name,
-        date: row.date,
-        amIn: "",
-        amOut: "",
-        pmIn: "",
-        pmOut: "",
-        timeIn: row.timeIn,
-        timeOut: "",
-        purpose: row.purpose,
-        address: row.address,
+      filteredInternData.forEach((row) => {
+        worksheet.addRow({
+          id: row.id,
+          name: row.name,
+          school: row.school,
+          course: row.course,
+          date: row.date,
+          amIn: row.amIn,
+          amOut: row.amOut,
+          pmIn: row.pmIn,
+          pmOut: row.pmOut,
+          timeIn: "",
+          timeOut: "",
+          purpose: "",
+          address: "",
+        });
       });
-    });
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    saveAs(blob, `${filename}.xlsx`);
-    toast.success("Attendance data exported successfully");
-    setIsExportModalOpen(false);
+      filteredVisitorData.forEach((row) => {
+        worksheet.addRow({
+          id: row.id,
+          name: row.name,
+          date: row.date,
+          amIn: "",
+          amOut: "",
+          pmIn: "",
+          pmOut: "",
+          timeIn: row.timeIn,
+          timeOut: "",
+          purpose: row.purpose,
+          address: row.address,
+        });
+      });
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      saveAs(blob, `${filename}.xlsx`);
+      toast.success("Attendance data exported successfully");
+      setIsExportModalOpen(false);
     } catch (error) {
       console.error("Export error:", error);
       toast.error("Failed to export attendance data");

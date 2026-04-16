@@ -27,6 +27,9 @@ const AddModal = ({
   size = "md",
   initialData = {},
   submitLabel = "Save",
+  submitVariant = "primary",
+  submitCustomColor,
+  headerColor = "bg-gradient-to-r from-blue-600 to-blue-700",
 }) => {
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
@@ -165,7 +168,9 @@ const AddModal = ({
         className={`relative w-full ${sizeClasses[size]} mx-4 bg-white rounded-3xl shadow-2xl animate-fadeIn flex flex-col max-h-[85vh]`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-[#188b3e] shrink-0 rounded-t-3xl">
+        <div
+          className={`flex items-center justify-between px-6 py-4 ${headerColor} shrink-0 rounded-t-3xl`}
+        >
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-white">
               Add New {itemName}
@@ -318,7 +323,8 @@ const AddModal = ({
             </div>
             <div>
               <Button
-                variant="primary"
+                variant={submitVariant}
+                customColor={submitCustomColor}
                 onClick={handleSubmit}
                 type="submit"
                 label={submitLabel}

@@ -10,9 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "electron:dev": "set NODE_ENV=development && electron .",
-    "electron:build": "npm run build && electron-builder",
-    "electron:build:win": "npm run build && electron-builder --win",
-    "dist": "electron-builder"
+    "electron:build": "npm run build && npx electron-builder",
+    "electron:build:win": "npm run build && npx electron-builder --win",
+    "dist": "npx electron-builder"
   },
   "build": {
     "appId": "com.nuvelco.elogbook",
@@ -23,7 +23,7 @@
     },
     "files": [
       "dist/**/*",
-      "electron.js",
+      "main.js",
       "package.json"
     ],
     "win": {
@@ -42,7 +42,7 @@
           ]
         }
       ],
-      "icon": "public/favicon.ico"
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": false,
@@ -80,8 +80,8 @@
     "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@vitejs/plugin-react": "^5.1.1",
     "daisyui": "^5.5.14",
-    "electron": "^35.0.0",
-    "electron-builder": "^25.0.0",
+    "electron": "^41.2.0",
+    "electron-builder": "^26.8.1",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   FiDownload,
   FiCalendar,
@@ -8,6 +8,7 @@ import {
   FiMinimize,
   FiMaximize2,
   FiInfo,
+  FiArrowUp,
 } from "react-icons/fi";
 import Btn_X from "../Buttons/Btn_X.jsx";
 import Button from "../Buttons/Button.jsx";
@@ -38,6 +39,8 @@ const PreviewDtrModal = ({
 
   const [zoomScale, setZoomScale] = useState(80);
   const [isFullScreen, setIsFullScreen] = useState(true);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const contentRef = useRef(null);
 
   // Disable body scroll when modal is open
   useEffect(() => {
@@ -70,6 +73,19 @@ const PreviewDtrModal = ({
       document.body.style.overflow = "";
       window.scrollTo(0, parseInt(scrollY || "0") * -1);
     };
+  }, [isOpen]);
+
+  // Handle scroll detection for scroll-to-top button visibility
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+
+    const handleScroll = () => {
+      setShowScrollTop(content.scrollTop > 100);
+    };
+
+    content.addEventListener("scroll", handleScroll);
+    return () => content.removeEventListener("scroll", handleScroll);
   }, [isOpen]);
 
   const handleZoom = (type) => {
@@ -108,32 +124,15 @@ const PreviewDtrModal = ({
     return hours * 60 + minutes;
   };
 
-  // Calculate hours between two times, excluding lunch break (12:00-1:59 PM)
+  // Calculate hours between two times (12:00-1:59 PM counted as working hours)
   const calculateHours = (timeIn, timeOut) => {
     if (!timeIn || !timeOut || timeIn === "--" || timeOut === "--") return "";
     const inMinutes = parseTimeToMinutes(timeIn);
     const outMinutes = parseTimeToMinutes(timeOut);
     if (inMinutes === null || outMinutes === null) return "";
 
-    const lunchStart = 12 * 60; // 12:00 PM = 720 minutes
-    const lunchEnd = 13 * 60 + 59; // 1:59 PM = 839 minutes
-
-    let totalMinutes = 0;
-
-    // If time range overlaps with lunch, subtract lunch period
-    if (inMinutes < lunchStart && outMinutes > lunchEnd) {
-      // Worked through both AM and PM (crossed lunch)
-      totalMinutes = lunchStart - inMinutes + (outMinutes - lunchEnd - 1);
-    } else if (inMinutes >= lunchStart && inMinutes <= lunchEnd) {
-      // Started during lunch, only count after lunch ends
-      totalMinutes = Math.max(0, outMinutes - lunchEnd - 1);
-    } else if (outMinutes >= lunchStart && outMinutes <= lunchEnd) {
-      // Ended during lunch, only count before lunch starts
-      totalMinutes = Math.max(0, lunchStart - inMinutes);
-    } else if (outMinutes < lunchStart || inMinutes > lunchEnd) {
-      // Entirely before or after lunch
-      totalMinutes = outMinutes - inMinutes;
-    }
+    // Count all hours including lunch period (12:00-1:59 PM is now open time)
+    const totalMinutes = outMinutes - inMinutes;
 
     if (totalMinutes <= 0) return "";
     const hours = Math.floor(totalMinutes / 60);
@@ -492,7 +491,7 @@ const PreviewDtrModal = ({
               GRAND TOTAL HOURS
             </td>
             <td className="border border-black px-0 py-0 text-center text-[12px] font-bold">
-              {calculateTotalSum([...leftRows, ...rightRows])}
+              {calculateTotalSum([...leftRows, ...rightRows]) || "0.00"}
             </td>
           </tr>
         )}
@@ -640,7 +639,10 @@ const PreviewDtrModal = ({
           </div>
 
           {/* Content */}
-          <div className="p-4 overflow-y-auto flex-1 bg-gray-50 relative">
+          <div
+            ref={contentRef}
+            className="p-4 overflow-y-auto flex-1 bg-gray-50 relative"
+          >
             {/* Sticky Action Bar */}
             <div className="sticky top-0 z-40 flex justify-between items-start mb-4 print:hidden pointer-events-none">
               {/* Month/Year Selector (Left) */}
@@ -689,34 +691,44 @@ const PreviewDtrModal = ({
                     <button className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-full transition-colors">
                       <FiInfo size={18} />
                     </button>
-                    
+
                     {/* Tooltip Content */}
                     <div className="absolute left-0 top-full mt-2 hidden group-hover:block w-72 bg-white rounded-xl shadow-2xl border border-gray-100 p-4 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
                       <div className="space-y-3">
-                        <h5 className="font-bold text-gray-900 text-sm border-b pb-2">Calculation Logic</h5>
+                        <h5 className="font-bold text-gray-900 text-sm border-b pb-2">
+                          Calculation Logic
+                        </h5>
                         <div className="space-y-2">
                           <div className="flex items-start gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></div>
                             <p className="text-[11px] text-gray-600">
-                              <span className="font-bold text-gray-800">Daily Total:</span> Calculated as (AM Hours) + (PM Hours).
-                            </p>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0"></div>
-                            <p className="text-[11px] text-gray-600">
-                              <span className="font-bold text-gray-800">Lunch Break:</span> Time between 12:00 PM and 1:59 PM is automatically deducted.
+                              <span className="font-bold text-gray-800">
+                                Daily Total:
+                              </span>{" "}
+                              Calculated as (AM Hours) + (PM Hours).
                             </p>
                           </div>
                           <div className="flex items-start gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0"></div>
                             <p className="text-[11px] text-gray-600">
-                              <span className="font-bold text-gray-800">Incomplete:</span> Shows <span className="font-mono text-red-600 bg-red-50 px-1 rounded">0.00</span> if a Time In or Out is missing.
+                              <span className="font-bold text-gray-800">
+                                Incomplete:
+                              </span>{" "}
+                              Shows{" "}
+                              <span className="font-mono text-red-600 bg-red-50 px-1 rounded">
+                                0.00
+                              </span>{" "}
+                              if a Time In or Out is missing.
                             </p>
                           </div>
                           <div className="flex items-start gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 shrink-0"></div>
                             <p className="text-[11px] text-gray-600">
-                              <span className="font-bold text-gray-800">Grand Total:</span> Sum of all daily totals, formatted as Hours.Minutes.
+                              <span className="font-bold text-gray-800">
+                                Grand Total:
+                              </span>{" "}
+                              Sum of all daily totals, formatted as
+                              Hours.Minutes.
                             </p>
                           </div>
                         </div>
@@ -1065,6 +1077,32 @@ const PreviewDtrModal = ({
                   </div>
                 </div>
               </div>
+
+              {/* Scroll to Top Button - only show when scrolled */}
+              {showScrollTop && (
+                <div className="absolute bottom-6 left-6 z-50 group">
+                  <button
+                    onClick={() => {
+                      if (contentRef.current) {
+                        contentRef.current.scrollTo({
+                          top: 0,
+                          behavior: "smooth",
+                        });
+                      }
+                    }}
+                    className="p-3 bg-[#188b3e] hover:bg-[#147a35] text-white rounded-full shadow-lg transition-all duration-300 hover:scale-110 animate-fadeIn"
+                    aria-label="Scroll to top"
+                  >
+                    <FiArrowUp size={24} />
+                  </button>
+                  {/* Tooltip */}
+                  <div className="absolute top-full left-0 mt-2 px-3 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                    Scroll to top
+                    {/* Tooltip arrow */}
+                    <div className="absolute bottom-full left-4 -ml-1 border-4 border-transparent border-b-gray-800"></div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

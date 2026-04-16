@@ -16,7 +16,7 @@ import {
 import { FaQrcode } from "react-icons/fa";
 import Button from "../../components/Buttons/Button.jsx";
 import LoginModal from "../../components/Modals/LoginModal.jsx";
-import AttendanceModal from "../../components/modals/AttendanceModal.jsx";
+import AttendanceModal from "../../components/Modals/AttendanceModal.jsx";
 import DeveloperModal from "../../components/Modals/DeveloperModal.jsx";
 import System_Logo from "../../components/Logo/System_Logo.jsx";
 import Client_Logo from "../../components/Logo/Client_Logo.jsx";
@@ -410,19 +410,6 @@ const LandingPage = () => {
 
             {/* Feature 2 */}
             <div className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow">
-              <div className="bg-blue-100 rounded-full p-4 w-fit mb-4">
-                <FaQrcode className="w-6 h-6 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                QR Code Attendance
-              </h3>
-              <p className="text-gray-600">
-                QR code scanning for interns and visitors attendance .
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow">
               <div className="bg-green-100 rounded-full p-4 w-fit mb-4">
                 <FiCamera className="w-6 h-6 text-green-600" />
               </div>
@@ -431,6 +418,19 @@ const LandingPage = () => {
               </h3>
               <p className="text-gray-600">
                 Automatic photo capture for every attendance entry.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="bg-gray-50 rounded-xl p-6 hover:shadow-lg transition-shadow">
+              <div className="bg-blue-100 rounded-full p-4 w-fit mb-4">
+                <FaQrcode className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                QR Code Attendance
+              </h3>
+              <p className="text-gray-600">
+                QR code scanning for interns and visitors attendance .
               </p>
             </div>
           </div>

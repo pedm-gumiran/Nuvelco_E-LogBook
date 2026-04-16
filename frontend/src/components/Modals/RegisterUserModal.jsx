@@ -493,6 +493,9 @@ const RegisterUserModal = ({ isOpen, onClose, onRegister }) => {
         fields={schoolFields}
         size="sm"
         submitLabel={"Save School"}
+        submitVariant="custom"
+        submitCustomColor="#188b3e"
+        headerColor={"bg-[#188b3e]"}
       />
 
       {/* Add Course Modal */}
@@ -504,6 +507,9 @@ const RegisterUserModal = ({ isOpen, onClose, onRegister }) => {
         fields={courseFields}
         size="sm"
         submitLabel={"Save Course"}
+        submitVariant="custom"
+        submitCustomColor="#188b3e"
+        headerColor={"bg-[#188b3e]"}
       />
     </div>
   );

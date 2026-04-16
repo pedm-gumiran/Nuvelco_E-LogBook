@@ -368,7 +368,9 @@ export default function School() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Schools</h1>
-          <p className="text-gray-600 mt-2">Manage school information</p>
+          <p className="text-gray-600 mt-2">
+            Manage school information, courses and interns account
+          </p>
         </div>
 
         <Card

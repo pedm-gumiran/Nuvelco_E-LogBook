@@ -48,7 +48,7 @@ exports.recordAttendance = async (internId, photo) => {
   try {
     // First, get intern information including school_id and course_id
     const [internRows] = await db.execute(
-      "SELECT id, first_name, last_name, school_id, course_id FROM intern WHERE id = ?",
+      "SELECT id, first_name, middle_initial, last_name,suffix, school_id, course_id FROM intern WHERE id = ?",
       [internId],
     );
 
@@ -57,7 +57,15 @@ exports.recordAttendance = async (internId, photo) => {
     }
 
     const intern = internRows[0];
-    const internName = `${intern.first_name} ${intern.last_name}`;
+    // Build full name with middle initial and suffix
+    let internName = intern.first_name;
+    if (intern.middle_initial && intern.middle_initial.trim()) {
+      internName += ` ${intern.middle_initial.trim()}`;
+    }
+    internName += ` ${intern.last_name}`;
+    if (intern.suffix && intern.suffix.trim()) {
+      internName += ` ${intern.suffix.trim()}`;
+    }
 
     // Lookup school name from school table using school_id
     let schoolName = "";
@@ -133,7 +141,17 @@ exports.recordAttendance = async (internId, photo) => {
           data: { action: "am_out", time: currentTime, id: existing.id },
         };
       } else if (existing.pm_in === null || existing.pm_in === "00:00:00") {
-        // Has AM complete but no PM time in - update PM time in with photo
+        // Has AM complete but no PM time in - check if it's after 12:00 before allowing PM time in
+        const currentHour = parseInt(currentTime.split(":")[0]);
+        if (currentHour < 12) {
+          return {
+            success: false,
+            message:
+              "PM time in is not yet available. Please wait until 12:00 PM.",
+            data: { action: "pm_in_wait", time: currentTime },
+          };
+        }
+        // After 12:00 - allow PM time in
         await db.execute(
           "UPDATE intern_attendance SET pm_in = ?, pm_in_image = ? WHERE id = ?",
           [currentTime, photo, existing.id],

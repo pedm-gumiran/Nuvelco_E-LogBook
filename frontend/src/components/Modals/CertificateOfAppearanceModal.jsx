@@ -11,6 +11,7 @@ import {
   FiMinimize,
   FiMaximize2,
   FiRotateCcw,
+  FiArrowUp,
 } from "react-icons/fi";
 import Button from "../Buttons/Button.jsx";
 
@@ -30,7 +31,9 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
   const [showPreview, setShowPreview] = useState(true);
   const [zoomScale, setZoomScale] = useState(65); // Initial zoom to see full page
   const [isFullScreen, setIsFullScreen] = useState(true); // Default full screen
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const fileInputRef = useRef(null);
+  const previewRef = useRef(null);
 
   // Editable fields for the certificate
   const [certData, setCertData] = useState({
@@ -127,6 +130,19 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
       }));
     }
   }, [selectedTemplate]);
+
+  // Handle scroll detection for scroll-to-top button visibility
+  useEffect(() => {
+    const preview = previewRef.current;
+    if (!preview) return;
+
+    const handleScroll = () => {
+      setShowScrollTop(preview.scrollTop > 100);
+    };
+
+    preview.addEventListener("scroll", handleScroll);
+    return () => preview.removeEventListener("scroll", handleScroll);
+  }, [isOpen]);
 
   // Disable scroll when modal is open
   useEffect(() => {
@@ -377,7 +393,16 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
                 </label>
                 <select
                   value={selectedTemplate}
-                  onChange={(e) => setSelectedTemplate(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedTemplate(e.target.value);
+                    // Scroll preview to top when template changes
+                    if (previewRef.current) {
+                      previewRef.current.scrollTo({
+                        top: 0,
+                        behavior: "smooth",
+                      });
+                    }
+                  }}
                   disabled={isGenerating}
                   className="w-full px-3 py-2 border border-blue-200 bg-blue-50/30 rounded-lg text-sm focus:ring-2 focus:ring-[#188b3e] outline-none font-medium text-blue-900 disabled:opacity-70"
                 >
@@ -692,7 +717,35 @@ const CertificateOfAppearanceModal = ({ isOpen, onClose, visitorData }) => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-auto p-8 flex justify-center items-start scrollbar-thin scrollbar-thumb-gray-400">
+            <div
+              ref={previewRef}
+              className="flex-1 overflow-auto p-8 flex justify-center items-start scrollbar-thin scrollbar-thumb-gray-400 relative"
+            >
+              {/* Scroll to Top Button - only show when scrolled */}
+              {showScrollTop && (
+                <div className="absolute bottom-6 left-6 z-50 group">
+                  <button
+                    onClick={() => {
+                      if (previewRef.current) {
+                        previewRef.current.scrollTo({
+                          top: 0,
+                          behavior: "smooth",
+                        });
+                      }
+                    }}
+                    className="p-3 bg-[#188b3e] hover:bg-[#147a35] text-white rounded-full shadow-lg transition-all duration-300 hover:scale-110 animate-fadeIn"
+                    aria-label="Scroll to top"
+                  >
+                    <FiArrowUp size={24} />
+                  </button>
+                  {/* Tooltip */}
+                  <div className="absolute top-full left-0 mt-2 px-3 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                    Scroll to top
+                    {/* Tooltip arrow */}
+                    <div className="absolute bottom-full left-4 -ml-1 border-4 border-transparent border-b-gray-800"></div>
+                  </div>
+                </div>
+              )}
               {/* Paper Container */}
               <div
                 id="certificate-paper"

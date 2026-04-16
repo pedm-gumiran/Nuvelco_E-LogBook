@@ -67,15 +67,56 @@ const AttendanceModal = ({ isOpen, onClose }) => {
     setShowManualSearchModal(false);
   };
 
+  // Build full intern name with middle initial and suffix
+  const buildInternName = (intern) => {
+    let name = intern.first_name;
+    if (intern.middle_initial && intern.middle_initial.trim()) {
+      name += ` ${intern.middle_initial.trim()}`;
+    }
+    name += ` ${intern.last_name}`;
+    if (intern.suffix && intern.suffix.trim()) {
+      name += ` ${intern.suffix.trim()}`;
+    }
+    return name;
+  };
+
   // Handle intern selection from manual search modal
   const handleManualInternSelect = async (intern) => {
     setLoading(true);
-    const personName = `${intern.first_name} ${intern.last_name}`;
+    const personName = buildInternName(intern);
 
     try {
       // Check if intern can record attendance
       const checkResult = await checkInternAttendanceStatus(intern.id);
       if (checkResult && !checkResult.canRecord) {
+        // Check if this is PM wait case (AM in/out done but before 12:00)
+        if (checkResult.pmWait) {
+          // Show warning card for PM time in not available
+          setScannedData({
+            originalData: intern.id,
+            message: checkResult.message,
+            isValid: false,
+            personType: "warning",
+            personName: personName,
+          });
+
+          cancelPreviousSpeech();
+          speechTimeoutRef.current = setTimeout(() => {
+            speak("PM time in is not yet available. Please wait until 12 PM.", {
+              rate: 0.8,
+              pitch: 1,
+              volume: 5,
+            });
+          }, 500);
+
+          setTimeout(() => {
+            setScannedData("");
+          }, 5000);
+
+          setShowManualSearchModal(false);
+          return;
+        }
+
         // Show the same toast card overlay as QR scan for completed attendance
         setScannedData({
           originalData: intern.id,
@@ -122,12 +163,15 @@ const AttendanceModal = ({ isOpen, onClose }) => {
     } catch (error) {
       console.error("Manual attendance error:", error);
 
-      // Show error toast card overlay
+      const errorMsg = error.message || "";
+      const isPmWait = errorMsg.includes("PM time in is not yet available");
+
+      // Show error/warning toast card overlay
       setScannedData({
         originalData: intern.id,
-        message: error.message || "Failed to process attendance",
+        message: errorMsg || "Failed to process attendance",
         isValid: false,
-        personType: "error",
+        personType: isPmWait ? "warning" : "error",
         personName: personName,
       });
 
@@ -136,11 +180,16 @@ const AttendanceModal = ({ isOpen, onClose }) => {
 
       // Speak the message
       speechTimeoutRef.current = setTimeout(() => {
-        speak("Attendance Unsuccessful", {
-          rate: 0.8,
-          pitch: 1,
-          volume: 5,
-        });
+        speak(
+          isPmWait
+            ? "PM time in is not yet available. Please wait until 12 PM."
+            : "Attendance Unsuccessful",
+          {
+            rate: 0.8,
+            pitch: 1,
+            volume: 5,
+          },
+        );
       }, 500);
 
       // Clear after 5 seconds
@@ -277,8 +326,7 @@ const AttendanceModal = ({ isOpen, onClose }) => {
       const personFound = await searchPersonInTables(id, searchType);
 
       if (personFound.type !== "not_found") {
-        personName =
-          personFound.data.first_name + " " + personFound.data.last_name;
+        personName = buildInternName(personFound.data);
       }
 
       if (personFound.type === "intern") {
@@ -286,6 +334,34 @@ const AttendanceModal = ({ isOpen, onClose }) => {
         // Check if intern already has complete attendance
         const checkResult = await checkInternAttendanceStatus(id);
         if (checkResult && !checkResult.canRecord) {
+          // Check if this is PM wait case (AM in/out done but before 12:00)
+          if (checkResult.pmWait) {
+            // Show warning card directly without camera modal
+            setScannedData({
+              originalData: data,
+              message: checkResult.message,
+              isValid: false,
+              personType: "warning",
+              personName: personName,
+            });
+
+            cancelPreviousSpeech();
+            speechTimeoutRef.current = setTimeout(() => {
+              speak(
+                "PM time in is not yet available. Please wait until 12 PM.",
+                {
+                  rate: 0.8,
+                  pitch: 1,
+                  volume: 5,
+                },
+              );
+            }, 500);
+
+            setTimeout(() => {
+              setScannedData("");
+            }, 5000);
+            return;
+          }
           throw new Error(
             checkResult.message || "Attendance already completed",
           );
@@ -316,6 +392,9 @@ const AttendanceModal = ({ isOpen, onClose }) => {
         const personDisplayName = personName || data;
         message = `Attendance is already completed for ${personDisplayName}`;
         personType = "completed";
+      } else if (errorMsg.includes("PM time in is not yet available")) {
+        message = errorMsg;
+        personType = "warning";
       } else {
         message = "Unknown QR Code ID";
         personType = "error";
@@ -381,7 +460,7 @@ const AttendanceModal = ({ isOpen, onClose }) => {
       }
 
       const intern = response.data.data;
-      const internName = `${intern.first_name} ${intern.last_name}`;
+      const internName = buildInternName(intern);
 
       // Check today's attendance
       const today = new Date().toISOString().slice(0, 10);
@@ -390,7 +469,8 @@ const AttendanceModal = ({ isOpen, onClose }) => {
       );
 
       if (attendanceRes.data.success) {
-        const todayRecords = attendanceRes.data.data.filter(
+        // Check for fully completed attendance (AM in/out + PM in/out)
+        const completedRecords = attendanceRes.data.data.filter(
           (record) =>
             record.intern_name === internName &&
             record.am_in &&
@@ -399,8 +479,30 @@ const AttendanceModal = ({ isOpen, onClose }) => {
             record.pm_out,
         );
 
-        if (todayRecords.length > 0) {
+        if (completedRecords.length > 0) {
           return { canRecord: false, message: "Attendance already completed" };
+        }
+
+        // Check for AM in/out completed but PM not yet started
+        const amCompletedRecords = attendanceRes.data.data.filter(
+          (record) =>
+            record.intern_name === internName &&
+            record.am_in &&
+            record.am_out &&
+            (!record.pm_in || record.pm_in === "00:00:00"),
+        );
+
+        if (amCompletedRecords.length > 0) {
+          // AM in/out is done, check if current time is before 12:00
+          const currentHour = new Date().getHours();
+          if (currentHour < 12) {
+            return {
+              canRecord: false,
+              pmWait: true,
+              message:
+                "PM time in is not yet available. Please wait until 12:00 PM.",
+            };
+          }
         }
       }
 
@@ -446,11 +548,16 @@ const AttendanceModal = ({ isOpen, onClose }) => {
       message = error.message || "Failed to save attendance";
       isValid = false;
 
+      // Check if this is the PM time in wait message
+      const isPmWaitMessage = message.includes(
+        "PM time in is not yet available",
+      );
+
       setScannedData({
         originalData: pendingScanData?.originalData,
         message,
         isValid: false,
-        personType: "error",
+        personType: isPmWaitMessage ? "warning" : "error",
         personName: pendingIntern.name,
       });
     } finally {
@@ -467,16 +574,20 @@ const AttendanceModal = ({ isOpen, onClose }) => {
 
     cancelPreviousSpeech();
     speechTimeoutRef.current = setTimeout(() => {
-      speak(
-        isValid
-          ? "Attendance Saved. Thank You very much"
-          : "Attendance Unsuccessful",
-        {
-          rate: 0.8,
-          pitch: 1,
-          volume: 5,
-        },
-      );
+      let speakMessage;
+      if (isValid) {
+        speakMessage = "Attendance Saved. Thank You very much";
+      } else if (message.includes("PM time in is not yet available")) {
+        speakMessage =
+          "PM time in is not yet available. Please wait until 12 PM.";
+      } else {
+        speakMessage = "Attendance Unsuccessful";
+      }
+      speak(speakMessage, {
+        rate: 0.8,
+        pitch: 1,
+        volume: 5,
+      });
     }, 500);
 
     setTimeout(() => {
@@ -486,14 +597,13 @@ const AttendanceModal = ({ isOpen, onClose }) => {
     }, 5000);
 
     if (isValid) {
-      setTimeout(() => fetchAttendanceData(), 1000);
+      // Update homepage counts immediately
+      localStorage.setItem("attendanceUpdated", Date.now().toString());
+      window.dispatchEvent(new CustomEvent("attendance-recorded"));
       // Reset manual search modal key to clear its data
       setManualSearchKey((prev) => prev + 1);
-      // Set flag and dispatch event after delay (to show notification first)
-      setTimeout(() => {
-        localStorage.setItem("attendanceUpdated", Date.now().toString());
-        window.dispatchEvent(new CustomEvent("attendance-recorded"));
-      }, 1500);
+      // Refresh data after short delay to show notification first
+      setTimeout(() => fetchAttendanceData(), 1000);
     }
   };
 
@@ -615,14 +725,11 @@ const AttendanceModal = ({ isOpen, onClose }) => {
           address: "",
           company_name: "",
         });
-        // Refresh data
-        fetchAttendanceData();
-        // Set flag for homepage to refresh when user returns (delayed to show notification first)
-        setTimeout(() => {
-          localStorage.setItem("attendanceUpdated", Date.now().toString());
-          // Dispatch event to update homepage counters
-          window.dispatchEvent(new CustomEvent("attendance-recorded"));
-        }, 1500);
+        // Update homepage counts immediately
+        localStorage.setItem("attendanceUpdated", Date.now().toString());
+        window.dispatchEvent(new CustomEvent("attendance-recorded"));
+        // Refresh data after short delay
+        setTimeout(() => fetchAttendanceData(), 1000);
 
         // Show success card overlay (same style as intern attendance)
         setScannedData({
@@ -1246,7 +1353,9 @@ const AttendanceModal = ({ isOpen, onClose }) => {
                 : "bg-green-600 border-green-400"
               : scannedData.personType === "completed"
                 ? "bg-orange-500 border-orange-300"
-                : "bg-red-600 border-red-400"
+                : scannedData.personType === "warning"
+                  ? "bg-yellow-500 border-yellow-300"
+                  : "bg-red-600 border-red-400"
           }`}
         >
           <div className="max-w-md mx-auto text-center">
@@ -1257,6 +1366,8 @@ const AttendanceModal = ({ isOpen, onClose }) => {
                 <FiUsers className="w-6 h-6 md:w-8 md:h-8 text-green-600" />
               ) : scannedData.personType === "completed" ? (
                 <FiAlertCircle className="w-6 h-6 md:w-8 md:h-8 text-orange-500" />
+              ) : scannedData.personType === "warning" ? (
+                <FiAlertCircle className="w-6 h-6 md:w-8 md:h-8 text-yellow-600" />
               ) : (
                 <FiUserPlus className="w-6 h-6 md:w-8 md:h-8 text-red-600" />
               )}
@@ -1266,7 +1377,9 @@ const AttendanceModal = ({ isOpen, onClose }) => {
                 ? "Welcome!"
                 : scannedData.personType === "completed"
                   ? "Warning"
-                  : "Please Register"}
+                  : scannedData.personType === "warning"
+                    ? "Not Available"
+                    : "Please Register"}
             </h3>
             <div className="bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/20">
               <p className="text-white text-lg md:text-2xl font-bold tracking-wide break-words">
@@ -1294,6 +1407,13 @@ const AttendanceModal = ({ isOpen, onClose }) => {
                     >
                       Please Register
                     </button>
+                  </div>
+                ) : scannedData.personType === "warning" ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <span>{scannedData.message}</span>
+                    <span className="text-white/60 text-xs">
+                      Please scan again after 12:00 PM
+                    </span>
                   </div>
                 ) : (
                   <span>{scannedData.message}</span>

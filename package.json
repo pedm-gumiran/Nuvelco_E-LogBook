@@ -1,21 +1,56 @@
 {
-  "name": "qr-attendance-checker---source-code",
+  "name": "nuvelco-e-logbook",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "frontend": "cd frontend && npm run dev",
     "backend": "cd backend && npm run dev",
     "dev": "concurrently --kill-others-on-fail -n \"BACKEND,FRONTEND\" -c \"bgBlue.bold,bgMagenta.bold\" \"npm run backend\" \"npm run frontend\"",
     "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install",
-    "build": "cd frontend && npm run build",
-    "start": "npm run dev"
+    "build-frontend": "cd frontend && npm run build",
+    "start": "electron .",
+    "dist": "npm run build-frontend && electron-builder"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "build": {
+    "appId": "com.nuvelco.elogbook",
+    "productName": "Nuvelco E-LogBook",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "backend/**/*",
+      "frontend/dist/**/*",
+      "frontend/public/system_logo_electron.png",
+      "package.json",
+      "backend/.env"
+    ],
+    "icon": "frontend/public/system_logo_electron.png",
+    "win": {
+      "icon": "frontend/public/system_logo_electron.png",
+      "target": "nsis"
+    }
+  },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "electron": "^41.2.0",
+    "electron-builder": "^26.8.1"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "express-async-handler": "^1.2.0",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "mysql2": "^3.16.0",
+    "papaparse": "^5.5.3"
   }
 }

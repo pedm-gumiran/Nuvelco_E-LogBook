@@ -81,10 +81,23 @@ const ManualInternSearchModal = ({
     setShowInternDropdown(value.length > 0);
   };
 
+  // Build full intern name with middle initial and suffix
+  const buildInternName = (intern) => {
+    let name = intern.first_name || "";
+    if (intern.middle_initial && intern.middle_initial.trim()) {
+      name += ` ${intern.middle_initial.trim()}`;
+    }
+    name += ` ${intern.last_name || ""}`;
+    if (intern.suffix && intern.suffix.trim()) {
+      name += ` ${intern.suffix.trim()}`;
+    }
+    return name.trim();
+  };
+
   // Handle intern selection
   const handleInternSelect = (intern) => {
     setSelectedIntern(intern);
-    setInternSearchQuery(`${intern.first_name} ${intern.last_name}`);
+    setInternSearchQuery(buildInternName(intern));
     setShowInternDropdown(false);
   };
 
@@ -146,8 +159,7 @@ const ManualInternSearchModal = ({
             <div className="mb-4 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
               {internsList
                 .filter((intern) => {
-                  const fullName =
-                    `${intern.first_name || ""} ${intern.last_name || ""}`.toLowerCase();
+                  const fullName = buildInternName(intern).toLowerCase();
                   const internId = (intern.intern_id || "").toLowerCase();
                   const query = internSearchQuery.toLowerCase();
                   return fullName.includes(query) || internId.includes(query);
@@ -164,13 +176,12 @@ const ManualInternSearchModal = ({
                     }`}
                   >
                     <div className="font-semibold text-sm text-gray-800">
-                      {intern.first_name || "Unknown"} {intern.last_name || ""}
+                      {buildInternName(intern) || "Unknown"}
                     </div>
                   </button>
                 ))}
               {internsList.filter((intern) => {
-                const fullName =
-                  `${intern.first_name || ""} ${intern.last_name || ""}`.toLowerCase();
+                const fullName = buildInternName(intern).toLowerCase();
                 const internId = (intern.intern_id || "").toLowerCase();
                 const query = internSearchQuery.toLowerCase();
                 return fullName.includes(query) || internId.includes(query);
@@ -189,7 +200,7 @@ const ManualInternSearchModal = ({
                 Selected
               </div>
               <div className="font-semibold text-gray-800">
-                {selectedIntern.first_name} {selectedIntern.last_name}
+                {buildInternName(selectedIntern)}
               </div>
             </div>
           )}
